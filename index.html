@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -7,17 +8,17 @@
     <style>
         body { font-family: sans-serif; background-color: #f4f4f4; margin: 0; padding: 15px; color: #333; }
         
-        .app-container { background: #fff; max-width: 800px; margin: 0 auto; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative;}
+        .app-container { background: #fff; max-width: 900px; margin: 0 auto; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative;}
         h1 { font-size: 1.3em; border-bottom: 2px solid #A68B5B; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px; text-align: center; color: #333;}
         
-        .tab-wrapper { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px 2px; border: 1px solid #ccc; background: #f9f9f9; color: #666; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.9em; text-align: center; transition: 0.2s;}
+        .tab-wrapper { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; padding: 12px 2px; border: 1px solid #ccc; background: #f9f9f9; color: #666; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.85em; text-align: center; transition: 0.2s; min-width: 80px;}
         .tab-btn.active-sales { background: #5b7da6; color: white; border-color: #5b7da6; }
         .tab-btn.active-purchase { background: #d9534f; color: white; border-color: #d9534f; }
         .tab-btn.active-report { background: #A68B5B; color: white; border-color: #A68B5B; }
+        .tab-btn.active-calendar { background: #7c5ba6; color: white; border-color: #7c5ba6; }
 
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.85em; color: #555;}
-        /* ▼ スマホ最適化: font-size: 16px で iOSの自動ズームを防止 ▼ */
         input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
         
         .input-group { position: relative; }
@@ -46,9 +47,18 @@
         .btn-submit:hover { opacity: 0.8; }
         .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
 
+        /* レポート画面のスタイル */
         .summary-box { background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; }
         .summary-month { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #A68B5B; display: flex; justify-content: space-between; align-items: center;}
         .summary-month button { background: none; border: 1px solid #ccc; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.9em;}
+        
+        .target-btn { background: none; border: 1px dashed #A68B5B; color: #A68B5B; width: 100%; padding: 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; transition: 0.2s;}
+        .target-btn:hover { background: #fcfaf7; }
+        
+        .progress-wrapper { background: #e0e0e0; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #5b7da6; border-radius: 3px; transition: width 0.5s; }
+        .progress-bar.achieved { background: #A68B5B; }
+        .target-text { font-size: 0.75em; color: #666; margin-top: 5px; display: block; }
         
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;}
         .summary-item { padding: 15px; border-radius: 6px; }
@@ -63,11 +73,26 @@
         .profit-value { font-size: 1.8em; font-weight: bold; color: #333; display: block; margin-top: 5px; }
 
         .profit-details { display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
-        .profit-details div { text-align: center; width: 50%; }
-        .profit-details div:first-child { border-right: 1px dashed #ccc; }
+        .profit-details div { text-align: center; flex: 1; padding: 0 5px; }
+        .profit-details div:not(:last-child) { border-right: 1px dashed #ccc; }
         .detail-label { display: block; font-size: 0.75em; color: #666; margin-bottom: 3px; }
         .detail-value { font-size: 1.1em; font-weight: bold; color: #333; }
         .detail-sub { display: block; font-size: 0.7em; color: #888; margin-top: 2px; }
+
+        /* ▼ カレンダー表示のスタイル ▼ */
+        .cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; background: #fff;}
+        .cal-table th { background: #f8f8f8; padding: 10px 0; border: 1px solid #ddd; font-size: 0.8em; color: #666; font-weight: normal;}
+        .cal-table td { height: 80px; border: 1px solid #ddd; vertical-align: top; padding: 4px; position: relative; cursor: pointer; overflow: hidden;}
+        .cal-table td:hover { background: #fcfaf7; }
+        .cal-day-num { font-size: 0.85em; font-weight: bold; color: #888; margin-bottom: 2px; display: block;}
+        /* 金額がはみ出さないように調整 */
+        .cal-target-amt, .cal-actual-amt, .cal-pct { font-size: 0.65em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.5px; line-height: 1.3;}
+        .cal-target-amt { color: #5b7da6; font-weight: bold; }
+        .cal-actual-amt { color: #333; margin-top: 2px;}
+        .cal-pct { color: #A68B5B; font-weight: bold;}
+        .cal-today { background-color: #fff9e6 !important; }
+        .cal-sunday { color: #d9534f; }
+        .cal-saturday { color: #5b7da6; }
 
         .history-controls { display: flex; gap: 10px; margin-bottom: 15px; background: #fafafa; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
         .history-controls input { flex: 2; margin-top: 0; padding: 10px; }
@@ -79,36 +104,27 @@
         .col-sales h4 { color: #5b7da6; border-color: #5b7da6; }
         .col-purchase h4 { color: #d9534f; border-color: #d9534f; }
 
-        .history-list { padding-top: 0; }
         .date-group { margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; background: #fff;}
         .date-header { background: #f4f7f6; padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; transition: 0.2s; }
         .date-header:hover { background: #eaf0f4; }
         .date-title { font-weight: bold; font-size: 0.95em; color: #333; }
-        .date-summary { font-size: 0.85em; }
-        .date-content { padding: 0 15px; display: none; }
+        .date-summary { font-size: 0.85em; text-align: right; line-height: 1.4; }
+        .date-content { display: none; padding: 0 15px;}
         .date-content.open { display: block; }
 
         .history-item { padding: 15px 0; border-bottom: 1px dashed #ccc; display: flex; flex-direction: column;}
-        .history-item:last-child { border-bottom: none; }
-        .history-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
-        .history-left { flex: 1; padding-right: 10px;}
-        .history-date { font-size: 0.75em; color: #888; }
-        .history-cat { font-weight: bold; font-size: 0.9em; margin-top: 2px;}
-        .history-note { font-size: 0.8em; color: #666; margin-top: 2px;}
-        
-        .history-details { background: #f9f9f9; border: 1px solid #eaeaea; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 0.85em; color: #555; display: none; }
+        .history-right { text-align: right; font-weight: bold; font-size: 1.1em; display: flex; flex-direction: column; align-items: flex-end;}
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.7em; color: white; margin-right: 5px;}
+        .bg-sales { background-color: #5b7da6; }
+        .bg-purchase { background-color: #d9534f; }
+
+        .history-details { background: #f9f9f9; border: 1px solid #eaeaea; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 0.85em; color: #555; }
         .history-detail-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #e0e0e0; padding: 4px 0; }
         .history-detail-row:last-child { border-bottom: none; }
         .history-detail-name { flex: 1; }
         .history-detail-calc { font-family: monospace; color: #888; }
         .extra-cost-row { color: #d9534f; font-size: 0.9em; margin-top: 5px; border-top: 1px dashed #ddd; padding-top: 5px;}
         .extra-discount-row { color: #5b7da6; font-size: 0.9em;}
-
-        .history-right { text-align: right; font-weight: bold; font-size: 1.1em; display: flex; flex-direction: column; align-items: flex-end;}
-        
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.7em; color: white; margin-right: 5px;}
-        .bg-sales { background-color: #5b7da6; }
-        .bg-purchase { background-color: #d9534f; }
 
         .btn-group { display: flex; gap: 5px; margin-top: 8px; }
         .action-btn { color: white; border: none; padding: 6px 10px; border-radius: 3px; font-size: 0.8em; cursor: pointer; }
@@ -118,28 +134,17 @@
 
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.95em; display: none; z-index: 1000; white-space: nowrap;}
         #edit-banner { background: #f0ad4e; color: white; text-align: center; padding: 12px; font-weight: bold; border-radius: 4px; margin-bottom: 15px; display: none;}
-        
         #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; border-radius: 8px; font-weight: bold; color: #A68B5B; font-size: 1.2em; flex-direction: column;}
 
-        /* ▼ スマホ用最適化 (画面幅が狭い場合) ▼ */
         @media (max-width: 700px) {
-            body { padding: 0; background-color: #fff; } /* グレーの余白を消して全画面化 */
-            .app-container { max-width: 100%; box-shadow: none; border-radius: 0; padding: 15px 12px; }
-            h1 { font-size: 1.2em; margin-bottom: 15px; }
-            
-            .tab-btn { font-size: 0.85em; padding: 10px 2px; }
-            .history-split { flex-direction: column; gap: 25px; }
-            
-            /* 検索・ソートを縦並びにしてタップしやすく */
-            .history-controls { flex-direction: column; gap: 10px; padding: 12px; }
-            .history-controls input, .history-controls select { width: 100%; }
-            
-            .summary-item { padding: 12px; }
-            .summary-value { font-size: 1.2em; }
-            .profit-box { padding: 15px 10px; }
-            .profit-value { font-size: 1.6em; }
-            .profit-details div { padding: 0 5px; }
-            .detail-value { font-size: 1.05em; }
+            body { padding: 0; background-color: #fff; } 
+            .app-container { max-width: 100%; box-shadow: none; border-radius: 0; padding: 15px 10px; }
+            h1 { font-size: 1.1em; margin-bottom: 10px; }
+            .tab-btn { font-size: 0.8em; padding: 10px 2px; }
+            .history-split { flex-direction: column; gap: 20px; }
+            .cal-table td { height: 75px; }
+            .cal-day-num { font-size: 0.75em; }
+            .cal-target-amt, .cal-actual-amt, .cal-pct { font-size: 0.55em; letter-spacing: -0.5px;}
         }
     </style>
 </head>
@@ -154,6 +159,7 @@
         <button class="tab-btn active-sales" id="tab-sales" onclick="switchTab('sales')">売上入力</button>
         <button class="tab-btn" id="tab-purchase" onclick="switchTab('purchase')">仕入入力</button>
         <button class="tab-btn" id="tab-report" onclick="switchTab('report')">レポート</button>
+        <button class="tab-btn" id="tab-calendar" onclick="switchTab('calendar')">目標カレンダー</button>
     </div>
 
     <div id="edit-banner">現在、過去の記録を編集中です...</div>
@@ -162,7 +168,6 @@
     <div id="section-sales">
         <label>日付</label>
         <input type="date" id="sales-date">
-        
         <label>売上区分</label>
         <select id="sales-category">
             <option value="カフェ売上">カフェ売上 (昼)</option>
@@ -170,23 +175,18 @@
             <option value="イベント参加費">イベント参加費</option>
             <option value="その他">その他</option>
         </select>
-
         <label>内訳（何を何個）</label>
         <div class="item-list" id="sales-items"></div>
         <button type="button" class="btn-add-item" onclick="addItemRow('sales')">＋ さらに明細を追加する</button>
-
         <div class="total-amount-display">合計: <span id="sales-total" class="val-sales">¥0</span></div>
-
         <label>メモ（任意）</label>
         <input type="text" id="sales-note" placeholder="例：〇〇様ご来店 など">
-
         <button class="btn-submit btn-sales" id="btn-sales-submit" onclick="saveData('sales')">売上を記録する</button>
     </div>
 
     <div id="section-purchase" style="display: none;">
         <label>日付</label>
         <input type="date" id="purchase-date">
-        
         <label>経費区分</label>
         <select id="purchase-category">
             <option value="酒類・飲料">酒類・飲料</option>
@@ -197,104 +197,73 @@
             <option value="家賃・光熱費など">家賃・光熱費など固定費</option>
             <option value="その他経費">その他経費</option>
         </select>
-
         <label>内訳（何を何個）</label>
         <div class="item-list" id="purchase-items"></div>
         <button type="button" class="btn-add-item" onclick="addItemRow('purchase')">＋ さらに明細を追加する</button>
-
         <div class="extra-costs">
-            <div>
-                <label style="margin-top: 0;">送料・手数料 (+)</label>
-                <div class="input-group">
-                    <input type="number" id="purchase-shipping" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')">
-                </div>
-            </div>
-            <div>
-                <label style="margin-top: 0;">ポイント利用・割引 (-)</label>
-                <div class="input-group">
-                    <input type="number" id="purchase-discount" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')">
-                </div>
-            </div>
+            <div><label style="margin-top: 0;">送料・手数料 (+)</label><div class="input-group"><input type="number" id="purchase-shipping" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
+            <div><label style="margin-top: 0;">割引・ポイント (-)</label><div class="input-group"><input type="number" id="purchase-discount" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
         </div>
-
         <div class="total-amount-display">合計: <span id="purchase-total" class="val-purchase">¥0</span></div>
-
-        <label>購入先・メモ（任意）</label>
-        <input type="text" id="purchase-note" placeholder="例：ドンキホーテ、Amazon など">
-
+        <label>購入先・メモ</label>
+        <input type="text" id="purchase-note" placeholder="例：Amazon など">
         <button class="btn-submit btn-purchase" id="btn-purchase-submit" onclick="saveData('purchase')">仕入・経費を記録する</button>
     </div>
 
     <div id="section-report" style="display: none;">
         <div class="summary-box">
-            <div class="summary-month">
-                <button onclick="changeMonth(-1)">＜ 先月</button>
-                <span id="display-month">2026年 3月</span>
-                <button onclick="changeMonth(1)">来月 ＞</button>
+            <div class="summary-month"><button onclick="changeMonth(-1)">＜ 先月</button><span id="display-month">2026年 3月</span><button onclick="changeMonth(1)">来月 ＞</button></div>
+            <button class="target-btn" onclick="toggleTargetModal()">🎯 売上目標を個別に設定する</button>
+            <div id="target-settings" style="display: none; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; text-align: left; position: relative;">
+                <button onclick="toggleTargetModal()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 1.5em; color: #999; cursor: pointer;">×</button>
+                <h4 style="margin: 0 0 10px; font-size: 1em; color: #A68B5B;">🎯 月間トータル目標</h4>
+                <div class="input-group"><input type="number" id="input-target-monthly" inputmode="numeric"></div>
+                <button class="btn-submit" style="margin-top:10px; padding:10px; background:#A68B5B; font-size: 0.9em;" onclick="saveMonthlyTarget()">保存</button>
+                <hr style="border:0; border-top:1px dashed #ccc; margin: 15px 0;">
+                <h4 style="margin: 0 0 10px; font-size: 1em; color: #5b7da6;">📅 1日ごとの目標</h4>
+                <input type="date" id="input-target-date" onchange="loadDailyTarget()">
+                <div class="input-group" style="margin-top:5px;"><input type="number" id="input-target-daily" inputmode="numeric"></div>
+                <button class="btn-submit" style="margin-top:10px; padding:10px; background:#5b7da6; font-size: 0.9em;" onclick="saveDailyTarget()">保存</button>
             </div>
-            
             <div class="summary-grid">
-                <div class="summary-item item-sales">
-                    <span class="summary-label">売上合計</span>
-                    <span class="summary-value val-sales" id="total-sales">¥0</span>
-                </div>
-                <div class="summary-item item-purchase">
-                    <span class="summary-label">仕入・経費合計</span>
-                    <span class="summary-value val-purchase" id="total-purchase">¥0</span>
-                </div>
+                <div class="summary-item item-sales"><span class="summary-label">売上合計</span><span class="summary-value val-sales" id="total-sales">¥0</span><div id="monthly-target-display"></div></div>
+                <div class="summary-item item-purchase"><span class="summary-label">仕入合計</span><span class="summary-value val-purchase" id="total-purchase">¥0</span></div>
             </div>
-            
             <div class="profit-box">
-                <span class="summary-label">今月の最終的な収益（手元に残るお金）</span>
-                <span class="profit-value" id="total-profit">¥0</span>
-                
+                <span class="summary-label">今月の粗利益</span><span class="profit-value" id="total-profit">¥0</span>
                 <div class="profit-details">
-                    <div>
-                        <span class="detail-label">利益率 (効率の良さ)</span>
-                        <span class="detail-value" id="profit-margin">0%</span>
-                        <span class="detail-sub">※目標は30%以上！</span>
-                    </div>
-                    <div>
-                        <span class="detail-label">1日あたりの平均売上</span>
-                        <span class="detail-value" id="avg-sales">¥0</span>
-                        <span class="detail-sub" id="active-days">稼働: 0日</span>
-                    </div>
+                    <div><span class="detail-label">利益率</span><span class="detail-value" id="profit-margin">0%</span></div>
+                    <div><span class="detail-label">1日平均</span><span class="detail-value" id="avg-sales">¥0</span><span class="detail-sub" id="active-days"></span></div>
+                    <div><span class="detail-label">目標達成</span><span class="detail-value" id="achieved-days">-</span><span class="detail-sub" id="achieved-sub"></span></div>
                 </div>
             </div>
         </div>
-
-        <h3 style="font-size: 1.1em; padding-bottom: 5px; margin-bottom: 10px;">今月の履歴・内訳</h3>
-        <div class="history-controls">
-            <input type="text" id="search-keyword" placeholder="品名やメモで検索..." oninput="renderReport()">
-            <select id="sort-order" onchange="renderReport()">
-                <option value="date-desc">新しい順</option>
-                <option value="date-asc">古い順</option>
-                <option value="amount-desc">金額が高い順</option>
-                <option value="amount-asc">金額が安い順</option>
-            </select>
-        </div>
-
+        <div class="history-controls"><input type="text" id="search-keyword" placeholder="検索..." oninput="renderReport()"><select id="sort-order" onchange="renderReport()"><option value="date-desc">新しい順</option><option value="date-asc">古い順</option></select></div>
         <div class="history-split">
-            <div class="history-col col-sales">
-                <h4>売上の履歴</h4>
-                <div class="history-list" id="history-sales-container"></div>
-            </div>
-            <div class="history-col col-purchase">
-                <h4>仕入・経費の履歴</h4>
-                <div class="history-list" id="history-purchase-container"></div>
-            </div>
+            <div class="history-col col-sales"><h4>売上履歴</h4><div class="history-list" id="history-sales-container"></div></div>
+            <div class="history-col col-purchase"><h4>仕入履歴</h4><div class="history-list" id="history-purchase-container"></div></div>
         </div>
-        
+    </div>
+
+    <div id="section-calendar" style="display: none;">
+        <div class="summary-box" style="margin-bottom: 10px;">
+            <div class="summary-month"><button onclick="changeMonth(-1)">＜</button><span id="cal-display-month">2026年 3月</span><button onclick="changeMonth(1)">＞</button></div>
+        </div>
+        <table class="cal-table">
+            <thead>
+                <tr><th class="cal-sunday">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th class="cal-saturday">土</th></tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+        </table>
+        <p style="font-size: 0.7em; color: #888; margin-top: 10px;">※日付をタップするとその日の目標を設定できます。</p>
     </div>
 </div>
 
-<div id="toast">記録しました</div>
+<div id="toast"></div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbysuqUZwOrTU_-GHNpAb-3rEr4tU9fHfn0aIPuBnzT-uvHnql8yyVFqT4pCQvu8gfNu/exec";
-    
     let allLedgerData = []; 
-
     const today = new Date();
     const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     
@@ -302,8 +271,7 @@
         loadLedgerData();
         document.getElementById('sales-date').value = todayStr;
         document.getElementById('purchase-date').value = todayStr;
-        addItemRow('sales');
-        addItemRow('purchase');
+        addItemRow('sales'); addItemRow('purchase');
     };
 
     let reportYear = today.getFullYear();
@@ -311,381 +279,299 @@
 
     function loadLedgerData() {
         document.getElementById('loading-overlay').style.display = 'flex';
-        fetch(GAS_URL)
-            .then(res => res.json())
-            .then(data => {
-                allLedgerData = data.ledger || [];
-                renderReport();
-                document.getElementById('loading-overlay').style.display = 'none';
-            })
-            .catch(err => {
-                alert("データの読み込みに失敗しました。電波の良いところで再度お試しください。");
-                document.getElementById('loading-overlay').style.display = 'none';
+        fetch(GAS_URL).then(res => res.json()).then(data => {
+            // ▼ 日付から「時刻」を完全に切り落として整形する処理（時刻バグ・連動バグの修正） ▼
+            allLedgerData = (data.ledger || []).map(r => {
+                if (r.date && r.date.includes('T')) {
+                    const d = new Date(r.date);
+                    r.date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+                return r;
             });
+            renderReport();
+            renderCalendar();
+            document.getElementById('loading-overlay').style.display = 'none';
+        }).catch(err => {
+            document.getElementById('loading-overlay').style.display = 'none';
+        });
     }
 
     function switchTab(tab) {
-        document.getElementById('section-sales').style.display = tab === 'sales' ? 'block' : 'none';
-        document.getElementById('section-purchase').style.display = tab === 'purchase' ? 'block' : 'none';
-        document.getElementById('section-report').style.display = tab === 'report' ? 'block' : 'none';
-
-        document.getElementById('tab-sales').className = 'tab-btn' + (tab === 'sales' ? ' active-sales' : '');
-        document.getElementById('tab-purchase').className = 'tab-btn' + (tab === 'purchase' ? ' active-purchase' : '');
-        document.getElementById('tab-report').className = 'tab-btn' + (tab === 'report' ? ' active-report' : '');
-
+        ['sales','purchase','report','calendar'].forEach(t => document.getElementById(`section-${t}`).style.display = (t === tab ? 'block' : 'none'));
+        ['sales','purchase','report','calendar'].forEach(t => document.getElementById(`tab-${t}`).className = 'tab-btn' + (t === tab ? ` active-${t}` : ''));
         if(tab === 'report') renderReport();
+        if(tab === 'calendar') renderCalendar();
     }
 
-    function resetForm(type) {
-        document.getElementById('edit-id').value = '';
-        document.getElementById('edit-banner').style.display = 'none';
-        document.getElementById(`${type}-date`).value = todayStr;
-        document.getElementById(`${type}-note`).value = '';
-        if(type === 'purchase') {
-            document.getElementById('purchase-shipping').value = '';
-            document.getElementById('purchase-discount').value = '';
-        }
-        document.getElementById(`${type}-items`).innerHTML = '';
-        addItemRow(type); 
-        calcTotal(type);
-        
-        document.getElementById(`btn-${type}-submit`).textContent = type === 'sales' ? "売上を記録する" : "仕入・経費を記録する";
-    }
-
-    function addItemRow(type, name = '', price = '', qty = 1) {
+    // フォーム操作
+    function addItemRow(type, name='', price='', qty=1) {
         const container = document.getElementById(`${type}-items`);
         const row = document.createElement('div');
         row.className = 'item-row';
-        let namePlaceholder = type === 'sales' ? '例: カフェラテ' : '例: トイレットペーパー';
-        row.innerHTML = `
-            <input type="text" class="i-name" placeholder="品名 (${namePlaceholder})" value="${name}">
-            <div class="item-inputs">
-                <input type="number" class="i-price" placeholder="単価" inputmode="numeric" value="${price}" oninput="calcTotal('${type}')" style="flex:3;">
-                <span class="unit-text">円 ×</span>
-                <input type="number" class="i-qty" placeholder="数量" value="${qty}" inputmode="numeric" oninput="calcTotal('${type}')" style="flex:2;">
-                <span class="unit-text">個</span>
-                <button type="button" class="btn-remove-item" onclick="removeRow(this, '${type}')">✖</button>
-            </div>
-        `;
+        row.innerHTML = `<input type="text" class="i-name" placeholder="品名" value="${name}"><div class="item-inputs"><input type="number" class="i-price" placeholder="単価" value="${price}" oninput="calcTotal('${type}')" style="flex:3;"><span class="unit-text">円×</span><input type="number" class="i-qty" value="${qty}" oninput="calcTotal('${type}')" style="flex:2;"><span class="unit-text">個</span><button type="button" class="btn-remove-item" onclick="removeRow(this,'${type}')">✖</button></div>`;
         container.appendChild(row);
     }
-
-    function removeRow(btn, type) {
-        btn.parentElement.parentElement.remove();
-        calcTotal(type);
-    }
-
+    function removeRow(btn, type) { btn.parentElement.parentElement.remove(); calcTotal(type); }
     function calcTotal(type) {
-        const container = document.getElementById(`${type}-items`);
-        const rows = container.querySelectorAll('.item-row');
+        const rows = document.querySelectorAll(`#${type}-items .item-row`);
         let total = 0;
-        rows.forEach(row => {
-            const price = parseInt(row.querySelector('.i-price').value) || 0;
-            const qty = parseInt(row.querySelector('.i-qty').value) || 0;
-            total += price * qty;
-        });
-        if(type === 'purchase') {
-            const shipping = parseInt(document.getElementById('purchase-shipping').value) || 0;
-            const discount = parseInt(document.getElementById('purchase-discount').value) || 0;
-            total = total + shipping - discount;
-            if(total < 0) total = 0;
-        }
-        document.getElementById(`${type}-total`).textContent = '¥' + total.toLocaleString();
+        rows.forEach(r => total += (parseInt(r.querySelector('.i-price').value) || 0) * (parseInt(r.querySelector('.i-qty').value) || 0));
+        if(type === 'purchase') total += (parseInt(document.getElementById('purchase-shipping').value) || 0) - (parseInt(document.getElementById('purchase-discount').value) || 0);
+        document.getElementById(`${type}-total`).textContent = '¥' + Math.max(0, total).toLocaleString();
         return total;
     }
 
+    // 保存・削除
     function saveData(type) {
         const date = document.getElementById(`${type}-date`).value;
-        const category = document.getElementById(`${type}-category`).value;
+        const cat = document.getElementById(`${type}-category`).value;
         const note = document.getElementById(`${type}-note`).value;
         const editId = document.getElementById('edit-id').value;
-
-        const container = document.getElementById(`${type}-items`);
-        const rows = container.querySelectorAll('.item-row');
-        let items = [];
-        
-        rows.forEach(row => {
-            const name = row.querySelector('.i-name').value;
-            const price = parseInt(row.querySelector('.i-price').value) || 0;
-            const qty = parseInt(row.querySelector('.i-qty').value) || 0;
-            if(price > 0 || qty > 0 || name !== '') {
-                items.push({ name: name || '名称未記入', price: price, qty: qty });
-            }
+        const items = [];
+        document.querySelectorAll(`#${type}-items .item-row`).forEach(r => {
+            const n = r.querySelector('.i-name').value;
+            const p = parseInt(r.querySelector('.i-price').value) || 0;
+            const q = parseInt(r.querySelector('.i-qty').value) || 0;
+            if(n||p||q) items.push({name:n||'名称なし', price:p, qty:q});
         });
+        const total = calcTotal(type);
+        if(!date || (total <= 0 && items.length === 0)) return alert("正しく入力してください");
 
-        let shipping = 0; let discount = 0;
-        if(type === 'purchase') {
-            shipping = parseInt(document.getElementById('purchase-shipping').value) || 0;
-            discount = parseInt(document.getElementById('purchase-discount').value) || 0;
-        }
-        const totalAmount = calcTotal(type);
-
-        if (!date || totalAmount <= 0 && items.length === 0) {
-            alert("日付と内訳（単価・数量）を正しく入力してください！");
-            return;
-        }
-
-        const isEdit = !!editId;
-        const currentId = isEdit ? parseInt(editId) : Date.now();
-
-        const record = {
-            id: currentId, 
-            type: type, date: date, category: category, amount: totalAmount, note: note, items: items, shipping: shipping, discount: discount
-        };
-
-        if (isEdit) {
-            const index = allLedgerData.findIndex(r => r.id === currentId);
-            if (index !== -1) allLedgerData[index] = record;
-        } else {
-            allLedgerData.push(record);
-        }
-
-        renderReport();
-        showToast('保存しました！（裏側でクラウド同期中...）');
-
-        document.getElementById('edit-id').value = '';
-        document.getElementById('edit-banner').style.display = 'none';
-        document.getElementById(`btn-${type}-submit`).textContent = type === 'sales' ? "売上を記録する" : "仕入・経費を記録する";
-
-        fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ type: 'ledger_save', record: record })
-        }).catch(err => {
-            alert("通信エラー：クラウドへの保存に失敗しました。電波状況をご確認ください。");
-        });
-    }
-
-    function editRecord(id) {
-        const record = allLedgerData.find(r => r.id === id);
-        if (!record) return;
-
-        switchTab(record.type);
-        document.getElementById('edit-banner').style.display = 'block';
-        document.getElementById('edit-id').value = record.id;
-        document.getElementById(`btn-${record.type}-submit`).textContent = "変更内容を保存して上書きする";
-
-        const d = new Date(record.date);
-        const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        
-        document.getElementById(`${record.type}-date`).value = dateStr;
-        document.getElementById(`${record.type}-category`).value = record.category;
-        document.getElementById(`${record.type}-note`).value = record.note;
-
-        if (record.type === 'purchase') {
-            document.getElementById('purchase-shipping').value = record.shipping || '';
-            document.getElementById('purchase-discount').value = record.discount || '';
-        }
-
-        const container = document.getElementById(`${record.type}-items`);
-        container.innerHTML = '';
-        if (record.items && record.items.length > 0) {
-            record.items.forEach(item => addItemRow(record.type, item.name, item.price, item.qty));
-        } else {
-            addItemRow(record.type);
-        }
-        calcTotal(record.type);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const record = { id: editId ? parseInt(editId) : Date.now(), type, date, category: cat, amount: total, note, items, shipping: type==='purchase'?parseInt(document.getElementById('purchase-shipping').value)||0:0, discount: type==='purchase'?parseInt(document.getElementById('purchase-discount').value)||0:0 };
+        if(editId) { const idx = allLedgerData.findIndex(r=>r.id === record.id); if(idx!==-1) allLedgerData[idx] = record; } else { allLedgerData.push(record); }
+        renderReport(); renderCalendar(); showToast('保存しました');
+        document.getElementById('edit-id').value = ''; document.getElementById('edit-banner').style.display='none';
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ type: 'ledger_save', record }) });
     }
 
     function deleteRecord(id) {
-        if(!confirm("この記録を完全に削除しますか？")) return;
-        
+        if(!confirm("削除しますか？")) return;
         allLedgerData = allLedgerData.filter(r => r.id !== id);
-        renderReport();
-        showToast('削除しました（裏側でクラウド同期中...）');
-
-        fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ type: 'ledger_delete', id: id })
-        }).catch(err => {
-            alert("通信エラー：削除の同期に失敗しました。");
-        });
+        renderReport(); renderCalendar(); showToast('削除しました');
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ type: 'ledger_delete', id }) });
     }
 
-    function buildHistoryHtml(records, shouldGroup, type) {
-        if(records.length === 0) {
-            return '<p style="text-align:center; color:#999; font-size:0.9em; padding: 20px 0;">記録がありません。</p>';
+    // 目標設定
+    function toggleTargetModal() {
+        const m = document.getElementById('target-settings');
+        if(m.style.display==='none'){
+            const prefix = `${reportYear}-${String(reportMonth).padStart(2,'0')}`;
+            const target = allLedgerData.find(r => (r.type==='target_monthly'||r.type==='target') && r.date.startsWith(prefix));
+            document.getElementById('input-target-monthly').value = target ? target.amount : '';
+            document.getElementById('input-target-date').value = todayStr;
+            loadDailyTarget(); m.style.display='block';
+        } else { m.style.display='none'; }
+    }
+    function loadDailyTarget() {
+        const d = document.getElementById('input-target-date').value;
+        const target = allLedgerData.find(r => r.type==='target_daily' && r.date === d);
+        document.getElementById('input-target-daily').value = target ? target.amount : '';
+    }
+    function saveMonthlyTarget() {
+        const amt = parseInt(document.getElementById('input-target-monthly').value) || 0;
+        saveTargetRecord('target_monthly', `${reportYear}-${String(reportMonth).padStart(2,'0')}-01`, amt);
+    }
+    function saveDailyTarget() {
+        const d = document.getElementById('input-target-date').value;
+        const amt = parseInt(document.getElementById('input-target-daily').value) || 0;
+        if(d) saveTargetRecord('target_daily', d, amt);
+    }
+    function saveTargetRecord(type, date, amt) {
+        const target = allLedgerData.find(r => r.type===type && r.date === date);
+        const record = { id: target?target.id:Date.now(), type, date, category:'target', amount:amt, note:'', items:[], shipping:0, discount:0 };
+        if(target) { allLedgerData[allLedgerData.findIndex(r=>r.id===record.id)] = record; } else { allLedgerData.push(record); }
+        renderReport(); renderCalendar(); showToast('目標を保存しました');
+        fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ type: 'ledger_save', record }) });
+    }
+
+    // カレンダー描画（k表記の廃止・実績連動）
+    function renderCalendar() {
+        const monthLabel = `${reportYear}年 ${reportMonth}月`;
+        document.getElementById('cal-display-month').textContent = monthLabel;
+        const container = document.getElementById('calendar-body');
+        container.innerHTML = '';
+
+        const firstDay = new Date(reportYear, reportMonth - 1, 1).getDay();
+        const lastDate = new Date(reportYear, reportMonth, 0).getDate();
+        
+        let date = 1;
+        for (let i = 0; i < 6; i++) {
+            const row = document.createElement('tr');
+            for (let j = 0; j < 7; j++) {
+                const cell = document.createElement('td');
+                if (i === 0 && j < firstDay) {
+                    // 空白
+                } else if (date > lastDate) {
+                    // 空白
+                } else {
+                    const fullDate = `${reportYear}-${String(reportMonth).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                    if(fullDate === todayStr) cell.classList.add('cal-today');
+                    if(j === 0) cell.classList.add('cal-sunday');
+                    if(j === 6) cell.classList.add('cal-saturday');
+
+                    // データ集計（時刻修正により完全にマッチします）
+                    const dailyTarget = allLedgerData.find(r => r.type === 'target_daily' && r.date === fullDate);
+                    const dailyActual = allLedgerData.filter(r => r.type === 'sales' && r.date === fullDate).reduce((sum, r) => sum + r.amount, 0);
+                    
+                    let html = `<span class="cal-day-num">${date}</span>`;
+                    if(dailyTarget && dailyTarget.amount > 0) html += `<span class="cal-target-amt">目: ¥${dailyTarget.amount.toLocaleString()}</span>`;
+                    if(dailyActual > 0) html += `<span class="cal-actual-amt">実: ¥${dailyActual.toLocaleString()}</span>`;
+                    if(dailyTarget && dailyTarget.amount > 0 && dailyActual > 0) {
+                        const pct = Math.floor((dailyActual / dailyTarget.amount) * 100);
+                        html += `<span class="cal-pct" style="color:${pct>=100?'#A68B5B':'#888'}">${pct}%</span>`;
+                    }
+
+                    cell.innerHTML = html;
+                    cell.onclick = () => {
+                        document.getElementById('input-target-date').value = fullDate;
+                        switchTab('report');
+                        toggleTargetModal();
+                    };
+                    date++;
+                }
+                row.appendChild(cell);
+            }
+            container.appendChild(row);
+            if (date > lastDate) break;
         }
+    }
+
+    // レポート描画
+    function renderReport() {
+        const prefix = `${reportYear}-${String(reportMonth).padStart(2, '0')}`;
+        document.getElementById('display-month').textContent = `${reportYear}年 ${reportMonth}月`;
+
+        const mTargetRec = allLedgerData.find(r => (r.type==='target_monthly'||r.type==='target') && r.date.startsWith(prefix));
+        const mTarget = mTargetRec ? mTargetRec.amount : 0;
+        const dTargets = {}; allLedgerData.forEach(r => { if(r.type==='target_daily') dTargets[r.date] = r.amount; });
+
+        let monthlyRecords = allLedgerData.filter(r => !r.type.startsWith('target') && r.date.startsWith(prefix));
+        const kw = document.getElementById('search-keyword').value.toLowerCase();
+        if(kw) monthlyRecords = monthlyRecords.filter(r => (r.note + r.category + (r.items?r.items.map(i=>i.name).join(''):'')).toLowerCase().includes(kw));
+        
+        const sort = document.getElementById('sort-order').value;
+        monthlyRecords.sort((a,b) => sort==='date-desc' ? new Date(b.date)-new Date(a.date) : new Date(a.date)-new Date(b.date));
+
+        const sales = monthlyRecords.filter(r=>r.type==='sales');
+        const purchase = monthlyRecords.filter(r=>r.type==='purchase');
+        const sTotal = sales.reduce((sum,r)=>sum+r.amount, 0);
+        const pTotal = purchase.reduce((sum,r)=>sum+r.amount, 0);
+
+        document.getElementById('total-sales').textContent = '¥'+sTotal.toLocaleString();
+        document.getElementById('total-purchase').textContent = '¥'+pTotal.toLocaleString();
+        
+        // 月間進捗
+        if(mTarget>0){
+            const pct = Math.floor((sTotal/mTarget)*100);
+            document.getElementById('monthly-target-display').innerHTML = `<div class="progress-wrapper"><div class="progress-bar ${pct>=100?'achieved':''}" style="width:${Math.min(100,pct)}%;"></div></div><span class="target-text">目標:¥${mTarget.toLocaleString()} (${pct}%)</span>`;
+        } else { document.getElementById('monthly-target-display').innerHTML = ''; }
+
+        const profit = sTotal - pTotal;
+        document.getElementById('total-profit').textContent = '¥'+profit.toLocaleString();
+        document.getElementById('profit-margin').textContent = sTotal>0 ? Math.floor((profit/sTotal)*100)+'%' : '0%';
+        
+        const salesByDate = {}; sales.forEach(r => salesByDate[r.date] = (salesByDate[r.date]||0)+r.amount);
+        const activeDays = Object.keys(salesByDate).length;
+        document.getElementById('avg-sales').textContent = '¥'+(activeDays>0?Math.floor(sTotal/activeDays):0).toLocaleString();
+        document.getElementById('active-days').textContent = `稼働:${activeDays}日`;
+
+        let achDays = 0, countWithTarget = 0;
+        Object.keys(dTargets).forEach(d => { if(d.startsWith(prefix)){ countWithTarget++; if((salesByDate[d]||0)>=dTargets[d]) achDays++; } });
+        document.getElementById('achieved-days').textContent = countWithTarget>0 ? `${achDays}日` : '-';
+        document.getElementById('achieved-sub').textContent = countWithTarget>0 ? `/ ${countWithTarget}日中` : '設定なし';
+
+        document.getElementById('history-sales-container').innerHTML = buildHistoryList(sales, true, 'sales', dTargets);
+        document.getElementById('history-purchase-container').innerHTML = buildHistoryList(purchase, true, 'purchase');
+    }
+
+    // 履歴リストの生成（日付と内訳の表示を整頓）
+    function buildHistoryList(recs, group, type, dTargets={}) {
+        if(recs.length===0) return '<p style="text-align:center;color:#999;font-size:0.8em;padding:10px;">なし</p>';
+        const grouped = {};
+        recs.forEach(r => { 
+            if(!grouped[r.date]) grouped[r.date]={amt:0, list:[]}; 
+            grouped[r.date].list.push(r); 
+            grouped[r.date].amt+=r.amount; 
+        });
         
         let html = '';
-        if(shouldGroup) {
-            const grouped = {};
-            records.forEach(r => {
-                const d = new Date(r.date);
-                const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                if(!grouped[dateStr]) grouped[dateStr] = { amount: 0, records: [] };
-                grouped[dateStr].records.push(r);
-                grouped[dateStr].amount += r.amount;
-            });
+        Object.keys(grouped).sort((a,b)=>document.getElementById('sort-order').value==='date-desc'?new Date(b)-new Date(a):new Date(a)-new Date(b)).forEach(d => {
+            const g = grouped[d];
+            let targetInfo = '';
+            if(type==='sales' && dTargets[d]) {
+                const pct = Math.floor((g.amt/dTargets[d])*100);
+                targetInfo = `<br><span style="font-size:0.7em; color:${pct>=100?'#A68B5B':'#888'};">目標:¥${dTargets[d].toLocaleString()} (${pct}%)</span>`;
+            }
+            
+            // 今日の日付のみ、グループを開いた状態にする
+            const isOpen = (d === todayStr) ? 'open' : '';
 
-            Object.keys(grouped).forEach(dateStr => {
-                const group = grouped[dateStr];
-                const isOpen = (dateStr === todayStr) ? 'open' : ''; 
-                const color = type === 'sales' ? '#5b7da6' : '#d9534f';
-                const prefix = type === 'sales' ? '売: ¥' : '仕: ¥';
-                const groupId = `group-${dateStr}-${type}`;
-                
+            html += `
+            <div class="date-group">
+                <div class="date-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                    <span class="date-title">${d.replace(/-/g,'/')}</span>
+                    <span class="date-summary" style="color:${type==='sales'?'#5b7da6':'#d9534f'}; font-weight:bold;">
+                        ${type==='sales'?'売':'仕'}:¥${g.amt.toLocaleString()}${targetInfo}
+                    </span>
+                </div>
+                <div class="date-content ${isOpen}">`;
+            
+            g.list.forEach(r => {
+                let itemsHtml = '';
+                if(r.items && r.items.length > 0) {
+                    // 内訳（明細）は display:none; で絶対に畳んだ状態からスタート
+                    itemsHtml = `<div class="history-details" id="details-${r.id}" style="display:none;">`;
+                    r.items.forEach(i => {
+                        itemsHtml += `<div class="history-detail-row"><span>${i.name}</span><span class="history-detail-calc">¥${i.price.toLocaleString()}×${i.qty}</span></div>`;
+                    });
+                    if(r.shipping) itemsHtml += `<div class="history-detail-row extra-cost-row"><span>送料・手数料</span><span>+¥${r.shipping.toLocaleString()}</span></div>`;
+                    if(r.discount) itemsHtml += `<div class="history-detail-row extra-discount-row"><span>割引・ポイント</span><span>-¥${r.discount.toLocaleString()}</span></div>`;
+                    itemsHtml += `</div>`;
+                }
+
                 html += `
-                <div class="date-group">
-                    <div class="date-header" onclick="toggleDateGroup('${groupId}')">
-                        <span class="date-title">${dateStr.replace(/-/g, '/')}</span>
-                        <span class="date-summary" style="color:${color}; font-weight:bold;">
-                            ${prefix}${group.amount.toLocaleString()}
-                        </span>
-                    </div>
-                    <div class="date-content ${isOpen}" id="${groupId}">
-                `;
-                group.records.forEach(r => {
-                    const d = new Date(r.date);
-                    const displayDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                    html += generateHistoryItemHtml(r, displayDate);
-                });
-                html += `</div></div>`;
+                <div class="history-item">
+                    <div class="history-top-row">
+                        <div class="history-left">
+                            <div class="history-cat"><span class="badge ${type==='sales'?'bg-sales':'bg-purchase'}">${type==='sales'?'売上':'仕入'}</span>${r.category}</div>
+                            <div class="history-note">${r.note||''}</div>
+                        </div>
+                        <div class="history-right">
+                            ¥${r.amount.toLocaleString()}
+                            <div class="btn-group">
+                                <button class="action-btn btn-edit" onclick="editRecord(${r.id})">編</button>
+                                <button class="action-btn btn-del" onclick="deleteRecord(${r.id})">消</button>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                // 内訳がある場合のみ、内訳ボタンを表示
+                if(itemsHtml) {
+                    html += `<button class="action-btn btn-toggle" onclick="const e=document.getElementById('details-${r.id}'); e.style.display=e.style.display==='block'?'none':'block';">▼ 内訳をみる</button>${itemsHtml}`;
+                }
+                
+                html += `</div>`;
             });
-        } else {
-            records.forEach(r => {
-                const d = new Date(r.date);
-                const displayDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                html += generateHistoryItemHtml(r, displayDate);
-            });
-        }
+            html += `</div></div>`;
+        });
         return html;
     }
 
-    function renderReport() {
-        document.getElementById('display-month').textContent = `${reportYear}年 ${reportMonth}月`;
-        
-        const monthPrefix = `${reportYear}-${String(reportMonth).padStart(2, '0')}`;
-        let monthlyRecords = allLedgerData.filter(r => {
-            const d = new Date(r.date);
-            const mStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-            return mStr === monthPrefix;
-        });
-
-        let totalSales = 0; let totalPurchase = 0;
-        monthlyRecords.forEach(r => {
-            if(r.type === 'sales') totalSales += r.amount;
-            else totalPurchase += r.amount;
-        });
-
-        const keyword = document.getElementById('search-keyword').value.toLowerCase();
-        const sortOrder = document.getElementById('sort-order').value;
-        const shouldGroup = (keyword === '') && (sortOrder === 'date-desc' || sortOrder === 'date-asc');
-
-        if(keyword) {
-            monthlyRecords = monthlyRecords.filter(r => {
-                const itemsStr = r.items ? r.items.map(i=>i.name).join(' ') : '';
-                const textToSearch = (r.note + ' ' + r.category + ' ' + itemsStr).toLowerCase();
-                return textToSearch.includes(keyword);
-            });
-        }
-
-        monthlyRecords.sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            if(sortOrder === 'date-desc') return dateB - dateA || b.id - a.id;
-            if(sortOrder === 'date-asc') return dateA - dateB || a.id - b.id;
-            if(sortOrder === 'amount-desc') return b.amount - a.amount;
-            if(sortOrder === 'amount-asc') return a.amount - b.amount;
-        });
-
-        const salesRecords = monthlyRecords.filter(r => r.type === 'sales');
-        const purchaseRecords = monthlyRecords.filter(r => r.type === 'purchase');
-
-        document.getElementById('history-sales-container').innerHTML = buildHistoryHtml(salesRecords, shouldGroup, 'sales');
-        document.getElementById('history-purchase-container').innerHTML = buildHistoryHtml(purchaseRecords, shouldGroup, 'purchase');
-
-        document.getElementById('total-sales').textContent = '¥' + totalSales.toLocaleString();
-        document.getElementById('total-purchase').textContent = '¥' + totalPurchase.toLocaleString();
-        const profit = totalSales - totalPurchase;
-        const profitEl = document.getElementById('total-profit');
-        profitEl.textContent = '¥' + profit.toLocaleString();
-        profitEl.style.color = profit < 0 ? '#d9534f' : '#333';
-
-        const margin = totalSales > 0 ? Math.floor((profit / totalSales) * 100) : 0;
-        const marginEl = document.getElementById('profit-margin');
-        marginEl.textContent = margin + '%';
-        marginEl.style.color = margin < 0 ? '#d9534f' : (margin >= 30 ? '#A68B5B' : '#333');
-
-        const activeDaysSet = new Set();
-        allLedgerData.forEach(r => {
-            if(r.type === 'sales') {
-                const d = new Date(r.date);
-                const mStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                if(mStr === monthPrefix) activeDaysSet.add(d.getDate());
-            }
-        });
-        const activeDays = activeDaysSet.size;
-        const avgSales = activeDays > 0 ? Math.floor(totalSales / activeDays) : 0;
-        document.getElementById('avg-sales').textContent = '¥' + avgSales.toLocaleString();
-        document.getElementById('active-days').textContent = `稼働: ${activeDays}日`;
+    function editRecord(id) {
+        const r = allLedgerData.find(x=>x.id===id); if(!r) return;
+        switchTab(r.type);
+        document.getElementById('edit-banner').style.display='block'; document.getElementById('edit-id').value=r.id;
+        document.getElementById(`btn-${r.type}-submit`).textContent="上書き保存する";
+        document.getElementById(`${r.type}-date`).value=r.date; document.getElementById(`${r.type}-category`).value=r.category;
+        document.getElementById(`${r.type}-note`).value=r.note;
+        if(r.type==='purchase'){ document.getElementById('purchase-shipping').value=r.shipping||''; document.getElementById('purchase-discount').value=r.discount||''; }
+        const cont = document.getElementById(`${r.type}-items`); cont.innerHTML='';
+        if(r.items && r.items.length>0) r.items.forEach(i=>addItemRow(r.type,i.name,i.price,i.qty)); else addItemRow(r.type);
+        calcTotal(r.type); window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    function generateHistoryItemHtml(r, displayDate) {
-        let itemsHtml = '';
-        if(r.items && r.items.length > 0) {
-            itemsHtml = `<div class="history-details" id="details-${r.id}">`;
-            r.items.forEach(item => {
-                itemsHtml += `
-                    <div class="history-detail-row">
-                        <span class="history-detail-name">${item.name}</span>
-                        <span class="history-detail-calc">¥${item.price.toLocaleString()} × ${item.qty}</span>
-                    </div>`;
-            });
-            if(r.type === 'purchase') {
-                if(r.shipping > 0) itemsHtml += `<div class="history-detail-row extra-cost-row"><span>送料・手数料</span><span>+¥${r.shipping.toLocaleString()}</span></div>`;
-                if(r.discount > 0) itemsHtml += `<div class="history-detail-row extra-discount-row"><span>割引・ポイント</span><span>-¥${r.discount.toLocaleString()}</span></div>`;
-            }
-            itemsHtml += '</div>';
-        }
-
-        const badge = r.type === 'sales' ? '<span class="badge bg-sales">売上</span>' : '<span class="badge bg-purchase">仕入</span>';
-        const sign = r.type === 'sales' ? '+' : '-';
-        const valClass = r.type === 'sales' ? 'val-sales' : 'val-purchase';
-
-        return `
-            <div class="history-item">
-                <div class="history-top-row">
-                    <div class="history-left">
-                        <span class="history-date">${displayDate}</span>
-                        <div class="history-cat">${badge}${r.category}</div>
-                        <span class="history-note">${r.note}</span>
-                    </div>
-                    <div class="history-right ${valClass}">
-                        ${sign}¥${r.amount.toLocaleString()}
-                        <div class="btn-group">
-                            <button class="action-btn btn-edit" onclick="editRecord(${r.id})">編集</button>
-                            <button class="action-btn btn-del" onclick="deleteRecord(${r.id})">削除</button>
-                        </div>
-                    </div>
-                </div>
-                ${itemsHtml !== '' ? `<button class="action-btn btn-toggle" onclick="toggleDetails(${r.id})">▼ 内訳をみる</button>${itemsHtml}` : ''}
-            </div>`;
-    }
-
-    function toggleDateGroup(groupId) {
-        const content = document.getElementById(groupId);
-        if(content) content.classList.toggle('open');
-    }
-
-    function toggleDetails(id) {
-        const detailDiv = document.getElementById(`details-${id}`);
-        detailDiv.style.display = detailDiv.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function changeMonth(offset) {
-        reportMonth += offset;
-        if(reportMonth < 1) { reportMonth = 12; reportYear--; }
-        if(reportMonth > 12) { reportMonth = 1; reportYear++; }
-        renderReport();
-    }
-
-    function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
+    function changeMonth(offset) { reportMonth += offset; if(reportMonth<1){reportMonth=12; reportYear--;} else if(reportMonth>12){reportMonth=1; reportYear++;} renderReport(); renderCalendar(); }
+    function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
 </script>
 </body>
 </html>
