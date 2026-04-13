@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -246,8 +245,16 @@
     </div>
 
     <div id="section-calendar" style="display: none;">
-        <div class="summary-box" style="margin-bottom: 10px;">
-            <div class="summary-month"><button onclick="changeMonth(-1)">＜</button><span id="cal-display-month">2026年 3月</span><button onclick="changeMonth(1)">＞</button></div>
+        <div class="summary-box" style="margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; padding: 15px;">
+            <div class="summary-month" style="margin-bottom: 0; justify-content: center; gap: 15px;">
+                <button onclick="changeMonth(-1)">＜</button>
+                <span id="cal-display-month">2026年 3月</span>
+                <button onclick="changeMonth(1)">＞</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #eee; padding-top: 10px; font-size: 0.9em;">
+                <div><span style="color:#666;">今月の目標:</span> <span id="cal-sum-target" style="font-weight:bold; color:#A68B5B;">¥0</span></div>
+                <div><span style="color:#666;">今月の売上:</span> <span id="cal-sum-sales" style="font-weight:bold; font-size: 1.2em; color:#333;">¥0</span></div>
+            </div>
         </div>
         <table class="cal-table">
             <thead>
@@ -280,7 +287,6 @@
     function loadLedgerData() {
         document.getElementById('loading-overlay').style.display = 'flex';
         fetch(GAS_URL).then(res => res.json()).then(data => {
-            // ▼ 日付から「時刻」を完全に切り落として整形する処理（時刻バグ・連動バグの修正） ▼
             allLedgerData = (data.ledger || []).map(r => {
                 if (r.date && r.date.includes('T')) {
                     const d = new Date(r.date);
@@ -384,12 +390,35 @@
         fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ type: 'ledger_save', record }) });
     }
 
-    // カレンダー描画（k表記の廃止・実績連動）
+    // カレンダー描画
     function renderCalendar() {
         const monthLabel = `${reportYear}年 ${reportMonth}月`;
         document.getElementById('cal-display-month').textContent = monthLabel;
         const container = document.getElementById('calendar-body');
         container.innerHTML = '';
+
+        // ▼ ▼ ▼ 追加：月間売上と目標の自動計算 ▼ ▼ ▼
+        const monthPrefix = `${reportYear}-${String(reportMonth).padStart(2, '0')}`;
+        
+        // 1. 今月の売上合計
+        const monthlySales = allLedgerData
+            .filter(r => r.type === 'sales' && r.date.startsWith(monthPrefix))
+            .reduce((sum, r) => sum + r.amount, 0);
+        
+        // 2. 今月の目標額（月間目標がなければ、日別目標を自動で足し算）
+        const mTargetRec = allLedgerData.find(r => (r.type === 'target_monthly' || r.type === 'target') && r.date.startsWith(monthPrefix));
+        let monthlyTarget = mTargetRec ? mTargetRec.amount : 0;
+        
+        if (monthlyTarget === 0) {
+             monthlyTarget = allLedgerData
+                 .filter(r => r.type === 'target_daily' && r.date.startsWith(monthPrefix))
+                 .reduce((sum, r) => sum + r.amount, 0);
+        }
+        
+        // 3. 画面の上部に反映
+        document.getElementById('cal-sum-sales').textContent = '¥' + monthlySales.toLocaleString();
+        document.getElementById('cal-sum-target').textContent = monthlyTarget > 0 ? '¥' + monthlyTarget.toLocaleString() : '未設定';
+        // ▲ ▲ ▲ ここまで ▲ ▲ ▲
 
         const firstDay = new Date(reportYear, reportMonth - 1, 1).getDay();
         const lastDate = new Date(reportYear, reportMonth, 0).getDate();
@@ -409,7 +438,6 @@
                     if(j === 0) cell.classList.add('cal-sunday');
                     if(j === 6) cell.classList.add('cal-saturday');
 
-                    // データ集計（時刻修正により完全にマッチします）
                     const dailyTarget = allLedgerData.find(r => r.type === 'target_daily' && r.date === fullDate);
                     const dailyActual = allLedgerData.filter(r => r.type === 'sales' && r.date === fullDate).reduce((sum, r) => sum + r.amount, 0);
                     
@@ -484,7 +512,7 @@
         document.getElementById('history-purchase-container').innerHTML = buildHistoryList(purchase, true, 'purchase');
     }
 
-    // 履歴リストの生成（日付と内訳の表示を整頓）
+    // 履歴リストの生成
     function buildHistoryList(recs, group, type, dTargets={}) {
         if(recs.length===0) return '<p style="text-align:center;color:#999;font-size:0.8em;padding:10px;">なし</p>';
         const grouped = {};
@@ -503,7 +531,6 @@
                 targetInfo = `<br><span style="font-size:0.7em; color:${pct>=100?'#A68B5B':'#888'};">目標:¥${dTargets[d].toLocaleString()} (${pct}%)</span>`;
             }
             
-            // 今日の日付のみ、グループを開いた状態にする
             const isOpen = (d === todayStr) ? 'open' : '';
 
             html += `
@@ -519,7 +546,6 @@
             g.list.forEach(r => {
                 let itemsHtml = '';
                 if(r.items && r.items.length > 0) {
-                    // 内訳（明細）は display:none; で絶対に畳んだ状態からスタート
                     itemsHtml = `<div class="history-details" id="details-${r.id}" style="display:none;">`;
                     r.items.forEach(i => {
                         itemsHtml += `<div class="history-detail-row"><span>${i.name}</span><span class="history-detail-calc">¥${i.price.toLocaleString()}×${i.qty}</span></div>`;
@@ -545,11 +571,9 @@
                         </div>
                     </div>`;
                 
-                // 内訳がある場合のみ、内訳ボタンを表示
                 if(itemsHtml) {
                     html += `<button class="action-btn btn-toggle" onclick="const e=document.getElementById('details-${r.id}'); e.style.display=e.style.display==='block'?'none':'block';">▼ 内訳をみる</button>${itemsHtml}`;
                 }
-                
                 html += `</div>`;
             });
             html += `</div></div>`;
