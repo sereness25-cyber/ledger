@@ -188,6 +188,42 @@
         #loading-overlay button { margin-top: 15px; border: none; background: #A68B5B; color: #fff; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; }
         #loading-overlay .sub { font-size: 0.65em; color: #666; margin-top: 10px; font-weight: normal; line-height: 1.6; }
 
+        /* レポートを短く */
+        #section-report .summary-box { padding: 12px; margin-bottom: 12px; }
+        #section-report .summary-month { margin-bottom: 8px; }
+        #section-report .target-btn { padding: 7px; margin-bottom: 10px; }
+        #section-report .summary-grid { margin-bottom: 10px; }
+        #section-report .summary-item { padding: 10px 12px; }
+        #section-report .summary-value { font-size: 1.25em; }
+        #section-report .profit-box { padding: 12px; }
+        #section-report .profit-value { font-size: 1.5em; margin-top: 0; }
+        #section-report .profit-details { margin-top: 8px; padding-top: 8px; }
+        .bd-wrap { margin-top: 10px; text-align: left; }
+        .bd-wrap > summary { cursor: pointer; font-size: 0.85em; font-weight: bold; color: #8C7042; padding: 8px 4px; list-style: none; }
+        .bd-wrap > summary::-webkit-details-marker { display: none; }
+        .bd-wrap > summary::after { content: " ▼"; font-size: 0.8em; }
+        .bd-wrap[open] > summary::after { content: " ▲"; }
+        .bd-wrap .breakdown { margin-top: 6px; }
+        .hist-tabs { display: none; gap: 6px; margin-bottom: 10px; }
+        .hist-tabs button { flex: 1; padding: 10px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 6px; font-weight: bold; color: #666; cursor: pointer; font-size: 0.9em; }
+        .hist-tabs button small { font-weight: normal; }
+        .hist-tabs #ht-sales.on { background: #5b7da6; border-color: #5b7da6; color: #fff; }
+        .hist-tabs #ht-purchase.on { background: #d9534f; border-color: #d9534f; color: #fff; }
+        @media (max-width: 959px) {
+            .hist-tabs { display: flex; }
+            .history-split[data-tab="sales"] .col-purchase, .history-split[data-tab="purchase"] .col-sales { display: none; }
+            .history-col h4 { display: none; }
+        }
+        /* 履歴の1件を1〜2行に */
+        .rec { padding: 8px 10px; margin-bottom: 6px; }
+        .rec-line { display: flex; align-items: center; gap: 8px; }
+        .rec-date { font-size: 0.8em; color: #666; white-space: nowrap; min-width: 5.2em; }
+        .rec-line .rec-cat { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88em; }
+        .rec-line .rec-amt { font-size: 1em; }
+        .ic { border: none; background: none; padding: 4px 6px; font-size: 1em; cursor: pointer; border-radius: 4px; line-height: 1; }
+        .ic:hover { background: #f2f2f2; }
+        .rec-sub { font-size: 0.76em; color: #777; margin-top: 3px; padding-left: calc(5.2em + 8px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         .layout { display: block; }
 
         /* パソコン・タブレット：左に入力、右にレポート／カレンダー */
@@ -322,13 +358,20 @@
                         <div><span class="detail-label">目標達成</span><span class="detail-value" id="achieved-days">-</span><span class="detail-sub" id="achieved-sub"></span></div>
                     </div>
                 </div>
-                <div class="breakdown">
-                    <div><h5 class="val-sales">売上の内訳</h5><div id="breakdown-sales"></div></div>
-                    <div><h5 class="val-purchase">仕入・経費の内訳</h5><div id="breakdown-purchase"></div></div>
-                </div>
+                <details class="bd-wrap">
+                    <summary>📊 区分別の内訳・来店人数を見る</summary>
+                    <div class="breakdown">
+                        <div><h5 class="val-sales">売上の内訳</h5><div id="breakdown-sales"></div></div>
+                        <div><h5 class="val-purchase">仕入・経費の内訳</h5><div id="breakdown-purchase"></div></div>
+                    </div>
+                </details>
             </div>
             <div class="history-controls"><input type="text" id="search-keyword" placeholder="品名・メモで検索..." oninput="resetHistoryLimit(); renderReport()"><select id="sort-order" onchange="resetHistoryLimit(); renderReport()"><option value="date-desc">新しい順</option><option value="date-asc">古い順</option></select></div>
-            <div class="history-split">
+            <div class="hist-tabs" role="tablist">
+                <button type="button" id="ht-sales" class="on" onclick="setHistTab('sales')">売上履歴 <small id="count-sales-tab"></small></button>
+                <button type="button" id="ht-purchase" onclick="setHistTab('purchase')">仕入履歴 <small id="count-purchase-tab"></small></button>
+            </div>
+            <div class="history-split" id="history-split" data-tab="sales">
                 <div class="history-col col-sales"><h4>売上履歴 <small id="count-sales"></small></h4><div class="history-list" id="history-sales-container"></div></div>
                 <div class="history-col col-purchase"><h4>仕入履歴 <small id="count-purchase"></small></h4><div class="history-list" id="history-purchase-container"></div></div>
             </div>
@@ -787,43 +830,39 @@
         const sales = salesAll.filter(match).sort(sorter), purchase = purchaseAll.filter(match).sort(sorter);
         document.getElementById('count-sales').textContent = `${sales.length}件`;
         document.getElementById('count-purchase').textContent = `${purchase.length}件`;
+        document.getElementById('count-sales-tab').textContent = `${sales.length}件・${yen(sales.reduce((t, r) => t + r.amount, 0))}`;
+        document.getElementById('count-purchase-tab').textContent = `${purchase.length}件・${yen(purchase.reduce((t, r) => t + r.amount, 0))}`;
         document.getElementById('history-sales-container').innerHTML = buildHistoryList(sales, dTargets, 'sales');
         document.getElementById('history-purchase-container').innerHTML = buildHistoryList(purchase, null, 'purchase');
     }
 
-    // 記録1件のカード
+    // 記録1件（1行目：日付・区分・金額・編集／削除、2行目：人数や明細・メモ）
     function recCard(r) {
         const items = (r.items || []).filter(i => i && (i.name || i.price));
-        const itemsText = items.map(i => (r.type === 'sales' && (i.name === '男性' || i.name === '女性')) ? `${i.name} ${i.qty}名`
-            : `${esc(i.name)} ${yen(i.price)}×${i.qty}`).join('、');
-        const extra = [r.shipping ? `送料等 +${yen(r.shipping)}` : '', r.discount ? `割引 -${yen(r.discount)}` : ''].filter(Boolean).join('、');
+        const itemsText = items.map(i => (r.type === 'sales' && (i.name === '男性' || i.name === '女性')) ? `${i.name}${i.qty}名`
+            : `${esc(i.name)} ${yen(i.price)}×${i.qty}`).join('・');
+        const extra = [r.shipping ? `送料等 +${yen(r.shipping)}` : '', r.discount ? `割引 -${yen(r.discount)}` : ''].filter(Boolean).join('・');
+        const sub = [itemsText, extra, r.note ? '📝 ' + esc(r.note) : ''].filter(Boolean).join('　');
         const pend = pendingIds().has(r.id) ? '<span class="rec-pending">送信待ち</span>' : '';
+        const d = new Date(r.date + 'T00:00:00');
         return `<div class="rec ${r.type}">
-            <div class="rec-top"><span class="rec-cat">${esc(r.category)}${pend}</span><span class="rec-amt ${r.type === 'sales' ? 'val-sales' : 'val-purchase'}">${yen(r.amount)}</span></div>
-            ${itemsText || extra ? `<div class="rec-items">${itemsText}${itemsText && extra ? '、' : ''}${extra}</div>` : ''}
-            ${r.note ? `<div class="rec-note">📝 ${esc(r.note)}</div>` : ''}
-            <div class="rec-btns"><button class="b-edit" onclick="editRecord(${r.id})">編集</button><button class="b-del" onclick="deleteRecord(${r.id})">削除</button></div>
+            <div class="rec-line"><span class="rec-date">${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）</span><span class="rec-cat">${esc(r.category)}${pend}</span><span class="rec-amt ${r.type === 'sales' ? 'val-sales' : 'val-purchase'}">${yen(r.amount)}</span><button class="ic" title="編集" aria-label="編集" onclick="editRecord(${r.id})">✏️</button><button class="ic" title="削除" aria-label="削除" onclick="deleteRecord(${r.id})">🗑</button></div>
+            ${sub ? `<div class="rec-sub">${sub}</div>` : ''}
         </div>`;
     }
     function resetHistoryLimit() { historyLimit = { sales: HISTORY_STEP, purchase: HISTORY_STEP }; }
     function showMore(type) { historyLimit[type] += 20; renderReport(); }
     function buildHistoryList(recs, dTargets, type) {
         if (recs.length === 0) return '<p class="empty">記録なし</p>';
-        let html = '', cur = null;
-        const dayTotal = {}; recs.forEach(r => dayTotal[r.date] = (dayTotal[r.date] || 0) + r.amount);
         const shown = recs.slice(0, historyLimit[type]);
-        shown.forEach(r => {
-            if (r.date !== cur) {
-                cur = r.date;
-                const d = new Date(r.date + 'T00:00:00');
-                let info = yen(dayTotal[r.date]);
-                if (dTargets && dTargets[r.date]) { const pct = Math.floor(dayTotal[r.date] / dTargets[r.date] * 100); info += ` <span style="color:${pct >= 100 ? '#3c763d' : '#a15c00'}">(目標${pct}%)</span>`; }
-                html += `<div class="day-head"><span>${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）</span><span>${info}</span></div>`;
-            }
-            html += recCard(r);
-        });
+        let html = shown.map(recCard).join('');
         if (recs.length > shown.length) html += `<button class="btn-more" onclick="showMore('${type}')">もっと見る（残り${recs.length - shown.length}件）</button>`;
         return html;
+    }
+    function setHistTab(t) {
+        document.getElementById('history-split').dataset.tab = t;
+        document.getElementById('ht-sales').classList.toggle('on', t === 'sales');
+        document.getElementById('ht-purchase').classList.toggle('on', t === 'purchase');
     }
 
     /* ===== 編集 ===== */
