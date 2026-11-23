@@ -214,6 +214,25 @@
             .history-split[data-tab="sales"] .col-purchase, .history-split[data-tab="purchase"] .col-sales { display: none; }
             .history-col h4 { display: none; }
         }
+        /* 日にちごとの折りたたみ */
+        .day-grp { border: 1px solid #e6e6e6; border-left-width: 4px; border-radius: 6px; margin-bottom: 6px; background: #fff; }
+        .day-grp.sales { border-left-color: #5b7da6; }
+        .day-grp.purchase { border-left-color: #d9534f; }
+        .day-grp > summary { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; list-style: none; }
+        .day-grp > summary::-webkit-details-marker { display: none; }
+        .day-grp > summary::before { content: "▶"; font-size: 0.65em; color: #999; transition: transform .15s; }
+        .day-grp[open] > summary::before { transform: rotate(90deg); }
+        .dg-date { font-weight: bold; font-size: 0.9em; white-space: nowrap; }
+        .dg-cnt { font-size: 0.75em; color: #999; }
+        .dg-tgt { font-size: 0.75em; font-weight: bold; }
+        .dg-amt { margin-left: auto; font-weight: bold; white-space: nowrap; }
+        .dg-body { padding: 0 8px 6px; }
+        .dg-body .rec { border-left-width: 1px; margin-bottom: 4px; }
+        .dg-body .rec-date { display: none; }
+        .dg-body .rec-sub { padding-left: 0; }
+        .dg-tools { display: flex; justify-content: flex-end; gap: 6px; margin: -4px 0 8px; }
+        .dg-tools button { border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 4px 10px; font-size: 0.75em; color: #666; cursor: pointer; }
+
         /* 履歴の1件を1〜2行に */
         .rec { padding: 8px 10px; margin-bottom: 6px; }
         .rec-line { display: flex; align-items: center; gap: 8px; }
@@ -371,6 +390,7 @@
                 <button type="button" id="ht-sales" class="on" onclick="setHistTab('sales')">売上履歴 <small id="count-sales-tab"></small></button>
                 <button type="button" id="ht-purchase" onclick="setHistTab('purchase')">仕入履歴 <small id="count-purchase-tab"></small></button>
             </div>
+            <div class="dg-tools"><button type="button" onclick="setAllDays(true)">すべて開く</button><button type="button" onclick="setAllDays(false)">すべて閉じる</button></div>
             <div class="history-split" id="history-split" data-tab="sales">
                 <div class="history-col col-sales"><h4>売上履歴 <small id="count-sales"></small></h4><div class="history-list" id="history-sales-container"></div></div>
                 <div class="history-col col-purchase"><h4>仕入履歴 <small id="count-purchase"></small></h4><div class="history-list" id="history-purchase-container"></div></div>
@@ -851,13 +871,36 @@
         </div>`;
     }
     function resetHistoryLimit() { historyLimit = { sales: HISTORY_STEP, purchase: HISTORY_STEP }; }
-    function showMore(type) { historyLimit[type] += 20; renderReport(); }
+    function showMore(type) { historyLimit[type] += 10; renderReport(); }
+    // 日にちごとにまとめて、押すと開く（検索中は全部開く）。「もっと見る」は日数で増やす
+    const openDays = new Set();
     function buildHistoryList(recs, dTargets, type) {
         if (recs.length === 0) return '<p class="empty">記録なし</p>';
-        const shown = recs.slice(0, historyLimit[type]);
-        let html = shown.map(recCard).join('');
-        if (recs.length > shown.length) html += `<button class="btn-more" onclick="showMore('${type}')">もっと見る（残り${recs.length - shown.length}件）</button>`;
+        const days = [];
+        recs.forEach(r => { let g = days[days.length - 1]; if (!g || g.date !== r.date) { g = { date: r.date, list: [], total: 0 }; days.push(g); } g.list.push(r); g.total += r.amount; });
+        const searching = !!document.getElementById('search-keyword').value.trim();
+        const shown = days.slice(0, historyLimit[type]);
+        let html = shown.map(g => {
+            const d = new Date(g.date + 'T00:00:00');
+            let tgt = '';
+            if (dTargets && dTargets[g.date]) { const pct = Math.floor(g.total / dTargets[g.date] * 100); tgt = `<span class="dg-tgt" style="color:${pct >= 100 ? '#3c763d' : '#a15c00'}">目標${pct}%</span>`; }
+            const key = type + g.date;
+            return `<details class="day-grp ${type}" data-key="${key}" ${searching || openDays.has(key) ? 'open' : ''}>
+                <summary><span class="dg-date">${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）</span><span class="dg-cnt">${g.list.length}件</span>${tgt}<span class="dg-amt ${type === 'sales' ? 'val-sales' : 'val-purchase'}">${yen(g.total)}</span></summary>
+                <div class="dg-body">${g.list.map(recCard).join('')}</div>
+            </details>`;
+        }).join('');
+        if (days.length > shown.length) html += `<button class="btn-more" onclick="showMore('${type}')">もっと見る（残り${days.length - shown.length}日）</button>`;
         return html;
+    }
+    function rememberDay(e) {
+        const d = e.target.closest && e.target.closest('details.day-grp');
+        if (!d || document.getElementById('search-keyword').value.trim()) return;
+        if (d.open) openDays.add(d.dataset.key); else openDays.delete(d.dataset.key);
+    }
+    document.addEventListener('toggle', rememberDay, true);
+    function setAllDays(open) {
+        document.querySelectorAll('#history-split details.day-grp').forEach(d => { d.open = open; });
     }
     function setHistTab(t) {
         document.getElementById('history-split').dataset.tab = t;
