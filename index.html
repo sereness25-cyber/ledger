@@ -218,10 +218,11 @@
         .day-grp { border: 1px solid #e6e6e6; border-left-width: 4px; border-radius: 6px; margin-bottom: 6px; background: #fff; }
         .day-grp.sales { border-left-color: #5b7da6; }
         .day-grp.purchase { border-left-color: #d9534f; }
-        .day-grp > summary { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; list-style: none; }
-        .day-grp > summary::-webkit-details-marker { display: none; }
-        .day-grp > summary::before { content: "▶"; font-size: 0.65em; color: #999; transition: transform .15s; }
-        .day-grp[open] > summary::before { transform: rotate(90deg); }
+        .dg-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; cursor: pointer; background: none; border: none; font: inherit; color: inherit; text-align: left; -webkit-tap-highlight-color: transparent; }
+        .dg-arrow { font-size: 0.65em; color: #999; transition: transform .15s; }
+        .day-grp.open .dg-arrow { transform: rotate(90deg); }
+        .day-grp .dg-body { display: none; }
+        .day-grp.open .dg-body { display: block; }
         .dg-date { font-weight: bold; font-size: 0.9em; white-space: nowrap; }
         .dg-cnt { font-size: 0.75em; color: #999; }
         .dg-tgt { font-size: 0.75em; font-weight: bold; }
@@ -885,22 +886,24 @@
             let tgt = '';
             if (dTargets && dTargets[g.date]) { const pct = Math.floor(g.total / dTargets[g.date] * 100); tgt = `<span class="dg-tgt" style="color:${pct >= 100 ? '#3c763d' : '#a15c00'}">目標${pct}%</span>`; }
             const key = type + g.date;
-            return `<details class="day-grp ${type}" data-key="${key}" ${searching || openDays.has(key) ? 'open' : ''}>
-                <summary><span class="dg-date">${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）</span><span class="dg-cnt">${g.list.length}件</span>${tgt}<span class="dg-amt ${type === 'sales' ? 'val-sales' : 'val-purchase'}">${yen(g.total)}</span></summary>
+            const isOpen = searching || openDays.has(key);
+            return `<div class="day-grp ${type}${isOpen ? ' open' : ''}" data-key="${key}">
+                <button type="button" class="dg-head" aria-expanded="${isOpen}" onclick="toggleDay(this)"><span class="dg-arrow" aria-hidden="true">▶</span><span class="dg-date">${d.getMonth() + 1}/${d.getDate()}（${WEEK[d.getDay()]}）</span><span class="dg-cnt">${g.list.length}件</span>${tgt}<span class="dg-amt ${type === 'sales' ? 'val-sales' : 'val-purchase'}">${yen(g.total)}</span></button>
                 <div class="dg-body">${g.list.map(recCard).join('')}</div>
-            </details>`;
+            </div>`;
         }).join('');
         if (days.length > shown.length) html += `<button class="btn-more" onclick="showMore('${type}')">もっと見る（残り${days.length - shown.length}日）</button>`;
         return html;
     }
-    function rememberDay(e) {
-        const d = e.target.closest && e.target.closest('details.day-grp');
-        if (!d || document.getElementById('search-keyword').value.trim()) return;
-        if (d.open) openDays.add(d.dataset.key); else openDays.delete(d.dataset.key);
+    // 日にちの見出しを押すと開く／閉じる（iPhoneのSafariでも確実に動くよう、ボタンで切り替える）
+    function setDayOpen(el, open) {
+        el.classList.toggle('open', open);
+        el.querySelector('.dg-head').setAttribute('aria-expanded', String(open));
+        if (open) openDays.add(el.dataset.key); else openDays.delete(el.dataset.key);
     }
-    document.addEventListener('toggle', rememberDay, true);
+    function toggleDay(btn) { const el = btn.closest('.day-grp'); setDayOpen(el, !el.classList.contains('open')); }
     function setAllDays(open) {
-        document.querySelectorAll('#history-split details.day-grp').forEach(d => { d.open = open; });
+        document.querySelectorAll('#history-split .day-grp').forEach(el => setDayOpen(el, open));
     }
     function setHistTab(t) {
         document.getElementById('history-split').dataset.tab = t;
