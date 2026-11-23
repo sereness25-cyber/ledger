@@ -239,10 +239,9 @@
                 <div><label>日付</label><input type="date" id="sales-date" onchange="renderTodayStatus()"></div>
                 <div><label>売上区分</label>
                     <select id="sales-category">
-                        <option value="カフェ売上">カフェ売上 (昼)</option>
-                        <option value="バー売上">バー売上 (夜)</option>
-                        <option value="イベント参加費">イベント参加費</option>
-                        <option value="その他">その他</option>
+                        <option value="店舗">店舗</option>
+                        <option value="イベント">イベント</option>
+                        <option value="Uber">Uber</option>
                     </select>
                 </div>
             </div>
@@ -836,7 +835,8 @@
         document.getElementById('edit-id').value = r.id;
         document.getElementById(`btn-${r.type}-submit`).textContent = "上書き保存する";
         document.getElementById(`btn-${r.type}-cancel`).style.display = 'block';
-        document.getElementById(`${r.type}-date`).value = r.date; document.getElementById(`${r.type}-category`).value = r.category;
+        document.getElementById(`${r.type}-date`).value = r.date;
+        setCategory(r.type, r.category);
         document.getElementById(`${r.type}-note`).value = r.note || '';
         if (r.type === 'purchase') { document.getElementById('purchase-shipping').value = r.shipping || ''; document.getElementById('purchase-discount').value = r.discount || ''; }
         if (r.type === 'sales') {
@@ -854,7 +854,17 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.querySelector('.pane-input').scrollTop = 0;
     }
+    // 以前の区分（カフェ売上・バー売上など）の記録を編集するときは、今の区分に読み替える。読み替えられないものはそのまま残す
+    const OLD_SALES_CATEGORY = { 'カフェ売上': '店舗', 'バー売上': '店舗', 'イベント参加費': 'イベント' };
+    function setCategory(type, cat) {
+        const sel = document.getElementById(`${type}-category`);
+        sel.querySelectorAll('option[data-old]').forEach(o => o.remove());
+        if (type === 'sales' && OLD_SALES_CATEGORY[cat]) cat = OLD_SALES_CATEGORY[cat];
+        if (![...sel.options].some(o => o.value === cat)) { const o = new Option(cat, cat); o.dataset.old = '1'; sel.add(o); }
+        sel.value = cat;
+    }
     function exitEditMode() {
+        document.querySelectorAll('option[data-old]').forEach(o => { const sel = o.parentElement; o.remove(); if (!sel.value) sel.selectedIndex = 0; });
         document.getElementById('edit-id').value = '';
         document.getElementById('edit-banner').style.display = 'none';
     }
