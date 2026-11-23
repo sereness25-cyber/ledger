@@ -37,18 +37,19 @@
         .today-status b { color: #333; }
         .today-status.done { background: #eef4fb; border-color: #c9d8ea; color: #44617f; }
 
-        /* よく使う明細（ワンタップ） */
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-        .chip { position: relative; border: 1px solid #c9d8ea; background: #fff; color: #44617f; border-radius: 999px; padding: 9px 14px; font-size: 0.9em; font-weight: bold; cursor: pointer; line-height: 1.2; }
-        .chip small { font-weight: normal; color: #888; margin-left: 4px; }
-        .chip:active { transform: scale(0.97); }
-        .chip.on { background: #5b7da6; color: #fff; border-color: #5b7da6; }
-        .chip.on small { color: #e6eef7; }
-        .chip .cnt { position: absolute; top: -7px; right: -6px; background: #f0ad4e; color: #fff; border-radius: 999px; min-width: 20px; height: 20px; font-size: 0.75em; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-sizing: border-box; }
-        .chip .cnt[hidden] { display: none; }
-        .chips-purchase .chip { border-color: #f0c8c6; color: #a94442; }
-        .chips-purchase .chip.on { background: #d9534f; color: #fff; border-color: #d9534f; }
-        .chips-hint { font-size: 0.75em; color: #999; font-weight: normal; }
+        /* 男性・女性の人数入力 */
+        .people { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 6px 12px; margin-top: 6px; }
+        .person-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; flex-wrap: wrap; }
+        .person-row + .person-row { border-top: 1px dashed #ddd; }
+        .person-label { font-weight: bold; font-size: 1.05em; width: 2.6em; }
+        .person-label.male { color: #5b7da6; } .person-label.female { color: #c2577a; }
+        .stepper { display: flex; align-items: center; gap: 6px; }
+        .stepper button { width: 46px; height: 46px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 1.4em; font-weight: bold; color: #555; cursor: pointer; line-height: 1; }
+        .stepper button:active { background: #eee; }
+        .stepper input { width: 64px; margin: 0; text-align: center; font-size: 1.3em; font-weight: bold; padding: 8px 4px; }
+        .unit { font-size: 0.85em; color: #666; display: flex; align-items: center; gap: 4px; margin-left: auto; white-space: nowrap; }
+        .unit input { width: 84px; margin: 0; padding: 8px; text-align: right; font-size: 15px; }
+        .sub-total { font-size: 0.8em; color: #888; width: 100%; text-align: right; margin-top: -4px; }
 
         .item-list { background: #fafafa; padding: 10px; border-radius: 6px; border: 1px solid #eee; margin-top: 5px; }
         .item-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
@@ -237,7 +238,7 @@
             <div class="row-2">
                 <div><label>日付</label><input type="date" id="sales-date" onchange="renderTodayStatus()"></div>
                 <div><label>売上区分</label>
-                    <select id="sales-category" onchange="renderChips('sales')">
+                    <select id="sales-category" onchange="applyPrices(); calcTotal('sales')">
                         <option value="カフェ売上">カフェ売上 (昼)</option>
                         <option value="バー売上">バー売上 (夜)</option>
                         <option value="イベント参加費">イベント参加費</option>
@@ -245,11 +246,23 @@
                     </select>
                 </div>
             </div>
-            <label>よく使う明細 <span class="chips-hint">（タップするたびに ＋1）</span></label>
-            <div class="chips" id="sales-chips"></div>
-            <label>内訳（何を何個）</label>
-            <div class="item-list" id="sales-items"></div>
-            <button type="button" class="btn-add-item" onclick="addItemRow('sales')">＋ さらに明細を追加する</button>
+            <label>来店人数</label>
+            <div class="people">
+                <div class="person-row">
+                    <span class="person-label male">男性</span>
+                    <div class="stepper"><button type="button" onclick="stepPeople('male',-1)" aria-label="男性を1人減らす">−</button><input type="number" inputmode="numeric" min="0" id="sales-male" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('male',1)" aria-label="男性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
+                    <span class="unit">1人 <input type="number" inputmode="numeric" id="price-male" oninput="calcTotal('sales')">円</span>
+                    <span class="sub-total" id="sub-male"></span>
+                </div>
+                <div class="person-row">
+                    <span class="person-label female">女性</span>
+                    <div class="stepper"><button type="button" onclick="stepPeople('female',-1)" aria-label="女性を1人減らす">−</button><input type="number" inputmode="numeric" min="0" id="sales-female" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('female',1)" aria-label="女性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
+                    <span class="unit">1人 <input type="number" inputmode="numeric" id="price-female" oninput="calcTotal('sales')">円</span>
+                    <span class="sub-total" id="sub-female"></span>
+                </div>
+            </div>
+            <label>その他の売上（延長・単品ドリンクなど／任意）</label>
+            <div class="input-group"><input type="number" inputmode="numeric" id="sales-extra" placeholder="0" oninput="calcTotal('sales')"></div>
             <div class="total-amount-display">合計: <span id="sales-total" class="val-sales">¥0</span></div>
             <label>メモ（任意）</label>
             <input type="text" id="sales-note" placeholder="例：〇〇様ご来店 など">
@@ -261,7 +274,7 @@
             <div class="row-2">
                 <div><label style="margin-top:0">日付</label><input type="date" id="purchase-date"></div>
                 <div><label style="margin-top:0">経費区分</label>
-                    <select id="purchase-category" onchange="renderChips('purchase')">
+                    <select id="purchase-category">
                         <option value="酒類・飲料">酒類・飲料</option>
                         <option value="食材・おつまみ">食材・おつまみ</option>
                         <option value="消耗品（紙袋・洗剤など）">消耗品（紙袋・洗剤など）</option>
@@ -271,10 +284,6 @@
                         <option value="その他経費">その他経費</option>
                     </select>
                 </div>
-            </div>
-            <div id="purchase-chips-wrap">
-                <label>よく買うもの <span class="chips-hint">（これまでの記録から。タップで ＋1）</span></label>
-                <div class="chips chips-purchase" id="purchase-chips"></div>
             </div>
             <label>内訳（何を何個）</label>
             <div class="item-list" id="purchase-items"></div>
@@ -447,7 +456,7 @@
         });
     }
 
-    function renderAll() { renderReport(); renderCalendar(); renderChips('sales'); renderChips('purchase'); renderTodayStatus(); }
+    function renderAll() { renderReport(); renderCalendar(); renderTodayStatus(); }
 
     /* ===== タブと画面の並び ===== */
     const isWide = () => window.matchMedia('(min-width: 960px)').matches;
@@ -482,81 +491,53 @@
         if (!document.querySelector(`#${type}-items .item-row`)) addItemRow(type);
         calcTotal(type);
     }
+    // 区分ごとの1人あたりの料金（カフェ・バー）。それ以外の区分は手で入れる
+    const PRICES = { 'カフェ売上': { male: 1100, female: 550 }, 'バー売上': { male: 2650, female: 1100 } };
+    function applyPrices() {
+        const p = PRICES[document.getElementById('sales-category').value];
+        document.getElementById('price-male').value = p ? p.male : '';
+        document.getElementById('price-female').value = p ? p.female : '';
+    }
+    function stepPeople(who, d) {
+        const el = document.getElementById(`sales-${who}`);
+        el.value = Math.max(0, (parseInt(el.value) || 0) + d);
+        calcTotal('sales');
+    }
+    const num = (id) => Math.max(0, parseInt(document.getElementById(id).value) || 0);
+    function salesParts() {
+        const male = num('sales-male'), female = num('sales-female');
+        const pm = num('price-male'), pf = num('price-female'), extra = num('sales-extra');
+        return { male, female, pm, pf, extra, total: male * pm + female * pf + extra };
+    }
     function calcTotal(type) {
+        if (type === 'sales') {
+            const x = salesParts();
+            document.getElementById('sub-male').textContent = x.male ? `男性 ${x.male}名 = ${yen(x.male * x.pm)}` : '';
+            document.getElementById('sub-female').textContent = x.female ? `女性 ${x.female}名 = ${yen(x.female * x.pf)}` : '';
+            document.getElementById('sales-total').textContent = yen(x.total);
+            return x.total;
+        }
         const rows = document.querySelectorAll(`#${type}-items .item-row`);
         let total = 0;
         rows.forEach(r => total += (parseInt(r.querySelector('.i-price').value) || 0) * (parseInt(r.querySelector('.i-qty').value) || 0));
         if (type === 'purchase') total += (parseInt(document.getElementById('purchase-shipping').value) || 0) - (parseInt(document.getElementById('purchase-discount').value) || 0);
         document.getElementById(`${type}-total`).textContent = yen(Math.max(0, total));
-        updateChipCounts(type);
         return total;
     }
     function resetForm(type) {
-        document.getElementById(`${type}-items`).innerHTML = '';
-        addItemRow(type);
+        if (type === 'sales') {
+            document.getElementById('sales-male').value = 0; document.getElementById('sales-female').value = 0;
+            document.getElementById('sales-extra').value = ''; applyPrices();
+        } else {
+            document.getElementById('purchase-items').innerHTML = '';
+            addItemRow('purchase');
+        }
         document.getElementById(`${type}-note`).value = '';
         if (type === 'purchase') { document.getElementById('purchase-shipping').value = ''; document.getElementById('purchase-discount').value = ''; }
         if (!document.getElementById(`${type}-date`).value) document.getElementById(`${type}-date`).value = todayStr;
         document.getElementById(`btn-${type}-submit`).textContent = type === 'sales' ? '売上を記録する' : '仕入・経費を記録する';
         document.getElementById(`btn-${type}-cancel`).style.display = 'none';
         calcTotal(type);
-    }
-
-    /* ===== よく使う明細（ワンタップ入力） ===== */
-    // これまでの記録が少ないうちは、この料金表を使う
-    const DEFAULT_PRESETS = {
-        'カフェ売上': [['カフェ女性', 550], ['カフェ男性', 1100], ['延長30分', 550]],
-        'バー売上': [['バー女性', 1100], ['バー男性', 2650], ['延長30分', 550]],
-    };
-    function frequentItems(type, category) {
-        const count = (filterCat) => {
-            const m = new Map();
-            allLedgerData.forEach(r => {
-                if (r.type !== type || (filterCat && r.category !== category)) return;
-                (r.items || []).forEach(i => {
-                    if (!i || !i.name || i.name === '名称なし' || !(Number(i.price) > 0)) return;
-                    const k = i.name + '\u0000' + Number(i.price);
-                    const cur = m.get(k) || { name: i.name, price: Number(i.price), n: 0 };
-                    cur.n += 1; m.set(k, cur);
-                });
-            });
-            return [...m.values()].sort((a, b) => b.n - a.n);
-        };
-        let list = count(true);
-        if (list.length < 4) count(false).forEach(x => { if (!list.some(y => y.name === x.name && y.price === x.price)) list.push(x); });
-        if (type === 'sales') (DEFAULT_PRESETS[category] || []).forEach(([name, price]) => { if (!list.some(y => y.name === name)) list.push({ name, price, n: 0 }); });
-        return list.slice(0, 10);
-    }
-    function renderChips(type) {
-        const cat = document.getElementById(`${type}-category`).value;
-        const list = frequentItems(type, cat);
-        const box = document.getElementById(`${type}-chips`);
-        if (type === 'purchase') document.getElementById('purchase-chips-wrap').style.display = list.length ? 'block' : 'none';
-        box.innerHTML = list.length ? list.map(x => `<button type="button" class="chip" data-name="${esc(x.name)}" data-price="${x.price}" onclick="chipTap('${type}', this)">${esc(x.name)}<small>${yen(x.price)}</small><span class="cnt" hidden></span></button>`).join('')
-            : '<span class="chips-hint">記録を続けると、よく使う明細がここに出ます。</span>';
-        updateChipCounts(type);
-    }
-    function chipTap(type, btn) {
-        const name = btn.dataset.name, price = Number(btn.dataset.price);
-        const rows = [...document.querySelectorAll(`#${type}-items .item-row`)];
-        let row = rows.find(r => r.querySelector('.i-name').value === name && (parseInt(r.querySelector('.i-price').value) || 0) === price);
-        if (row) {
-            const q = row.querySelector('.i-qty'); q.value = (parseInt(q.value) || 0) + 1;
-        } else {
-            row = rows.find(r => !r.querySelector('.i-name').value && !r.querySelector('.i-price').value) || addItemRow(type);
-            row.querySelector('.i-name').value = name; row.querySelector('.i-price').value = price; row.querySelector('.i-qty').value = 1;
-        }
-        calcTotal(type);
-    }
-    function updateChipCounts(type) {
-        const rows = [...document.querySelectorAll(`#${type}-items .item-row`)];
-        document.querySelectorAll(`#${type}-chips .chip`).forEach(c => {
-            const row = rows.find(r => r.querySelector('.i-name').value === c.dataset.name && (parseInt(r.querySelector('.i-price').value) || 0) === Number(c.dataset.price));
-            const n = row ? (parseInt(row.querySelector('.i-qty').value) || 0) : 0;
-            const badge = c.querySelector('.cnt');
-            badge.hidden = n <= 0; badge.textContent = n;
-            c.classList.toggle('on', n > 0);
-        });
     }
 
     /* ===== 今日の入力状況 ===== */
@@ -584,14 +565,19 @@
         const note = document.getElementById(`${type}-note`).value;
         const editId = document.getElementById('edit-id').value;
         const items = [];
-        document.querySelectorAll(`#${type}-items .item-row`).forEach(r => {
+        if (type === 'sales') {
+            const x = salesParts();
+            if (x.male) items.push({ name: '男性', price: x.pm, qty: x.male });
+            if (x.female) items.push({ name: '女性', price: x.pf, qty: x.female });
+            if (x.extra) items.push({ name: 'その他', price: x.extra, qty: 1 });
+        } else document.querySelectorAll(`#${type}-items .item-row`).forEach(r => {
             const n = r.querySelector('.i-name').value.trim();
             const p = parseInt(r.querySelector('.i-price').value) || 0;
             const q = parseInt(r.querySelector('.i-qty').value) || 0;
             if (n || p) items.push({ name: n || '名称なし', price: p, qty: q });
         });
         const total = calcTotal(type);
-        if (!date || (total <= 0 && items.length === 0)) return alert("金額か明細を入力してください");
+        if (!date || total <= 0) return alert(type === 'sales' ? "人数（または その他の売上）を入力してください" : "金額か明細を入力してください");
 
         saving = true; setTimeout(() => saving = false, 800);   // 二度押し防止
         const record = { id: editId ? parseInt(editId) : Date.now(), type, date, category: cat, amount: Math.max(0, total), note, items, shipping: type === 'purchase' ? parseInt(document.getElementById('purchase-shipping').value) || 0 : 0, discount: type === 'purchase' ? parseInt(document.getElementById('purchase-discount').value) || 0 : 0 };
@@ -798,7 +784,9 @@
             document.getElementById('achieved-sub').textContent = '目標 未設定';
         }
 
-        document.getElementById('breakdown-sales').innerHTML = breakdownHtml(salesAll, '#5b7da6');
+        let vm = 0, vf = 0;
+        salesAll.forEach(r => (r.items || []).forEach(i => { if (/男/.test(i.name)) vm += Number(i.qty) || 0; else if (/女/.test(i.name)) vf += Number(i.qty) || 0; }));
+        document.getElementById('breakdown-sales').innerHTML = breakdownHtml(salesAll, '#5b7da6') + (vm || vf ? `<p class="bd-row" style="margin-top:6px">👥 来店人数 <b>${vm + vf}名</b>（男性 ${vm}名・女性 ${vf}名）</p>` : '');
         document.getElementById('breakdown-purchase').innerHTML = breakdownHtml(purchaseAll, '#d9534f');
 
         // 履歴（検索・並び替えはここだけに効く）
@@ -816,7 +804,8 @@
     // 記録1件のカード
     function recCard(r) {
         const items = (r.items || []).filter(i => i && (i.name || i.price));
-        const itemsText = items.map(i => `${esc(i.name)} ${yen(i.price)}×${i.qty}`).join('、');
+        const itemsText = items.map(i => (r.type === 'sales' && (i.name === '男性' || i.name === '女性')) ? `${i.name} ${i.qty}名`
+            : (r.type === 'sales' && i.name === 'その他') ? `その他 ${yen(i.price * (i.qty || 1))}` : `${esc(i.name)} ${yen(i.price)}×${i.qty}`).join('、');
         const extra = [r.shipping ? `送料等 +${yen(r.shipping)}` : '', r.discount ? `割引 -${yen(r.discount)}` : ''].filter(Boolean).join('、');
         const pend = pendingIds().has(r.id) ? '<span class="rec-pending">送信待ち</span>' : '';
         return `<div class="rec ${r.type}">
@@ -859,9 +848,24 @@
         document.getElementById(`${r.type}-date`).value = r.date; document.getElementById(`${r.type}-category`).value = r.category;
         document.getElementById(`${r.type}-note`).value = r.note || '';
         if (r.type === 'purchase') { document.getElementById('purchase-shipping').value = r.shipping || ''; document.getElementById('purchase-discount').value = r.discount || ''; }
-        const cont = document.getElementById(`${r.type}-items`); cont.innerHTML = '';
-        if (r.items && r.items.length > 0) r.items.forEach(i => addItemRow(r.type, i.name, i.price, i.qty)); else addItemRow(r.type);
-        renderChips(r.type); calcTotal(r.type);
+        if (r.type === 'sales') {
+            // 「男性」「女性」を含む明細は人数に、それ以外は「その他の売上」にまとめる（以前の形式の記録も編集できるように）
+            let male = 0, female = 0, pm = 0, pf = 0, extra = 0;
+            (r.items || []).forEach(i => {
+                const q = Number(i.qty) || 0, p = Number(i.price) || 0;
+                if (/男/.test(i.name)) { male += q; pm = p; } else if (/女/.test(i.name)) { female += q; pf = p; } else extra += p * q;
+            });
+            if (!(r.items || []).length) extra = r.amount;
+            applyPrices();
+            document.getElementById('sales-male').value = male; document.getElementById('sales-female').value = female;
+            if (pm) document.getElementById('price-male').value = pm;
+            if (pf) document.getElementById('price-female').value = pf;
+            document.getElementById('sales-extra').value = extra || '';
+        } else {
+            const cont = document.getElementById('purchase-items'); cont.innerHTML = '';
+            if (r.items && r.items.length > 0) r.items.forEach(i => addItemRow('purchase', i.name, i.price, i.qty)); else addItemRow('purchase');
+        }
+        calcTotal(r.type);
         if (r.type === 'sales') renderTodayStatus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.querySelector('.pane-input').scrollTop = 0;
