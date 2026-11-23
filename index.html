@@ -42,7 +42,7 @@
         .person-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; flex-wrap: wrap; }
         .person-row + .person-row { border-top: 1px dashed #ddd; }
         .person-label { font-weight: bold; font-size: 1.05em; width: 2.6em; }
-        .person-label.male { color: #5b7da6; } .person-label.female { color: #c2577a; }
+        .person-label.male { color: #5b7da6; } .person-label.female { color: #c2577a; } .person-label.amount { color: #333; }
         .stepper { display: flex; align-items: center; gap: 6px; }
         .stepper button { width: 46px; height: 46px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 1.4em; font-weight: bold; color: #555; cursor: pointer; line-height: 1; }
         .stepper button:active { background: #eee; }
@@ -246,19 +246,21 @@
                     </select>
                 </div>
             </div>
-            <label>来店人数</label>
+            <label>来店人数と売上</label>
             <div class="people">
                 <div class="person-row">
                     <span class="person-label male">男性</span>
-                    <div class="stepper"><button type="button" onclick="stepPeople('male',-1)" aria-label="男性を1人減らす">−</button><input type="number" inputmode="numeric" min="0" id="sales-male" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('male',1)" aria-label="男性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
+                    <div class="stepper"><button type="button" onclick="stepPeople('male',-1)" aria-label="男性を1人減らす">−</button><input type="text" pattern="[0-9]*" inputmode="numeric" min="0" id="sales-male" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('male',1)" aria-label="男性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
                 </div>
                 <div class="person-row">
                     <span class="person-label female">女性</span>
-                    <div class="stepper"><button type="button" onclick="stepPeople('female',-1)" aria-label="女性を1人減らす">−</button><input type="number" inputmode="numeric" min="0" id="sales-female" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('female',1)" aria-label="女性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
+                    <div class="stepper"><button type="button" onclick="stepPeople('female',-1)" aria-label="女性を1人減らす">−</button><input type="text" pattern="[0-9]*" inputmode="numeric" min="0" id="sales-female" value="0" oninput="calcTotal('sales')"><button type="button" onclick="stepPeople('female',1)" aria-label="女性を1人増やす">＋</button><span style="font-weight:bold">名</span></div>
+                </div>
+                <div class="person-row">
+                    <span class="person-label amount">合計</span>
+                    <div class="input-group" style="flex:1"><input type="text" pattern="[0-9]*" inputmode="numeric" id="sales-amount" placeholder="売上金額" oninput="calcTotal('sales')" style="font-size:1.3em; margin-top:0"></div>
                 </div>
             </div>
-            <label>売上金額（合計）</label>
-            <div class="input-group"><input type="number" inputmode="numeric" id="sales-amount" placeholder="0" oninput="calcTotal('sales')" style="font-size:1.3em"></div>
             <span id="sales-total" hidden></span>
             <label>メモ（任意）</label>
             <input type="text" id="sales-note" placeholder="例：〇〇様ご来店 など">
@@ -285,8 +287,8 @@
             <div class="item-list" id="purchase-items"></div>
             <button type="button" class="btn-add-item" onclick="addItemRow('purchase')">＋ さらに明細を追加する</button>
             <div class="extra-costs">
-                <div><label style="margin-top: 0;">送料・手数料 (+)</label><div class="input-group"><input type="number" id="purchase-shipping" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
-                <div><label style="margin-top: 0;">割引・ポイント (-)</label><div class="input-group"><input type="number" id="purchase-discount" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
+                <div><label style="margin-top: 0;">送料・手数料 (+)</label><div class="input-group"><input type="text" pattern="[0-9]*" id="purchase-shipping" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
+                <div><label style="margin-top: 0;">割引・ポイント (-)</label><div class="input-group"><input type="text" pattern="[0-9]*" id="purchase-discount" placeholder="0" inputmode="numeric" oninput="calcTotal('purchase')"></div></div>
             </div>
             <div class="total-amount-display">合計: <span id="purchase-total" class="val-purchase">¥0</span></div>
             <label>購入先・メモ</label>
@@ -304,7 +306,7 @@
                 <div id="target-settings" style="display: none; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; text-align: left; position: relative;">
                     <button onclick="toggleTargetModal()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 1.5em; color: #999; cursor: pointer;">×</button>
                     <h4 style="margin: 0 0 10px; font-size: 1em; color: #A68B5B;">🎯 月間トータル目標</h4>
-                    <div class="input-group"><input type="number" id="input-target-monthly" inputmode="numeric"></div>
+                    <div class="input-group"><input type="text" pattern="[0-9]*" id="input-target-monthly" inputmode="numeric"></div>
                     <button class="btn-submit" style="margin-top:10px; padding:10px; background:#A68B5B; font-size: 0.9em;" onclick="saveMonthlyTarget()">保存</button>
                     <p style="font-size:0.75em; color:#888; margin:12px 0 0;">📅 1日ごとの目標は「目標カレンダー」で日付をタップして設定できます。</p>
                 </div>
@@ -378,6 +380,14 @@
     let selectedDay = todayStr;
     const HISTORY_STEP = 10;
     let historyLimit = { sales: HISTORY_STEP, purchase: HISTORY_STEP };
+
+    // 数字の欄：全角数字を半角に、数字以外は消す（計算より先に動くよう capture で登録）
+    document.addEventListener('input', (e) => {
+        const el = e.target;
+        if (el.tagName !== 'INPUT' || el.getAttribute('inputmode') !== 'numeric') return;
+        const v = el.value.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '');
+        if (v !== el.value) el.value = v;
+    }, true);
 
     window.onload = () => {
         resetForm('sales'); resetForm('purchase');
@@ -478,7 +488,7 @@
         const container = document.getElementById(`${type}-items`);
         const row = document.createElement('div');
         row.className = 'item-row';
-        row.innerHTML = `<input type="text" class="i-name" placeholder="品名" value="${esc(name)}" oninput="calcTotal('${type}')"><div class="item-inputs"><input type="number" inputmode="numeric" class="i-price" placeholder="単価" value="${esc(price)}" oninput="calcTotal('${type}')" style="flex:3;"><span class="unit-text">円×</span><input type="number" inputmode="numeric" class="i-qty" value="${esc(qty)}" oninput="calcTotal('${type}')" style="flex:2;"><span class="unit-text">個</span><button type="button" class="btn-remove-item" onclick="removeRow(this,'${type}')">✖</button></div>`;
+        row.innerHTML = `<input type="text" class="i-name" placeholder="品名" value="${esc(name)}" oninput="calcTotal('${type}')"><div class="item-inputs"><input type="text" pattern="[0-9]*" inputmode="numeric" class="i-price" placeholder="単価" value="${esc(price)}" oninput="calcTotal('${type}')" style="flex:3;"><span class="unit-text">円×</span><input type="text" pattern="[0-9]*" inputmode="numeric" class="i-qty" value="${esc(qty)}" oninput="calcTotal('${type}')" style="flex:2;"><span class="unit-text">個</span><button type="button" class="btn-remove-item" onclick="removeRow(this,'${type}')">✖</button></div>`;
         container.appendChild(row);
         return row;
     }
@@ -686,7 +696,7 @@
         box.innerHTML = `
             <h4>${d.getMonth() + 1}月${d.getDate()}日（${WEEK[d.getDay()]}）<small>売上 <b class="val-sales">${yen(sTotal)}</b> ／ 仕入 <b class="val-purchase">${yen(pTotal)}</b></small></h4>
             ${sales.length || purchase.length ? [...sales, ...purchase].map(recCard).join('') : '<p class="empty">この日の記録はありません</p>'}
-            <div class="day-target"><span style="font-size:0.85em; font-weight:bold; color:#7c5ba6; white-space:nowrap;">🎯 この日の目標</span><div class="input-group"><input type="number" id="input-day-target" inputmode="numeric" value="${target}" placeholder="未設定"></div><button onclick="saveDailyTarget('${selectedDay}')">保存</button></div>
+            <div class="day-target"><span style="font-size:0.85em; font-weight:bold; color:#7c5ba6; white-space:nowrap;">🎯 この日の目標</span><div class="input-group"><input type="text" pattern="[0-9]*" id="input-day-target" inputmode="numeric" value="${target}" placeholder="未設定"></div><button onclick="saveDailyTarget('${selectedDay}')">保存</button></div>
             <div class="day-actions">
                 <button style="background:#5b7da6" onclick="startInputFor('sales','${selectedDay}')">＋ この日の売上を入力</button>
                 <button style="background:#d9534f" onclick="startInputFor('purchase','${selectedDay}')">＋ この日の仕入を入力</button>
