@@ -244,6 +244,53 @@
         .ic:hover { background: #f2f2f2; }
         .rec-sub { font-size: 0.76em; color: #777; margin-top: 3px; padding-left: calc(5.2em + 8px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+
+        /* ===== 在庫タブ（#section-inventory の中だけに効く） ===== */
+        .tab-btn.active-inventory { background: #2f7d6d; color: white; border-color: #2f7d6d; }
+        #section-inventory { --ok: #3c763d; --warn: #c0392b; --line: #e6e1d8; --inv: #2f7d6d; }
+        #section-inventory .inv-tabs { display: flex; gap: 6px; }
+        #section-inventory .inv-tabs button { flex: 1; padding: 9px 4px; border: 1px solid var(--inv); background: #fff; color: var(--inv); border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer; position: relative; }
+        #section-inventory .inv-tabs button.on { background: var(--inv); color: #fff; }
+        #section-inventory .inv-badge { position: absolute; top: -7px; right: -4px; background: var(--warn); color: #fff; border-radius: 999px; font-size: 0.75em; min-width: 20px; height: 20px; line-height: 20px; padding: 0 5px; }
+        #section-inventory .inv-panel { display: none; } #section-inventory .inv-panel.on { display: block; }
+        #section-inventory .inv-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 14px; margin-top: 12px; }
+        #section-inventory .inv-tools { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        #section-inventory .inv-tools input, #section-inventory .inv-tools select { flex: 1; min-width: 140px; margin-top: 0; padding: 10px; }
+        #section-inventory .inv-cat { margin: 16px 4px 6px; font-weight: bold; color: #5a3a20; font-size: 0.9em; display: flex; justify-content: space-between; }
+        #section-inventory .inv-cat small { color: #999; font-weight: normal; }
+        #section-inventory .inv-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 6px; }
+        #section-inventory .inv-row.low { border-color: #f0b4ad; background: #fff8f7; }
+        #section-inventory .inv-main { flex: 1; min-width: 0; }
+        #section-inventory .inv-name { font-weight: bold; word-break: break-word; }
+        #section-inventory .inv-sub { font-size: 0.75em; color: #888; margin-top: 2px; }
+        #section-inventory .inv-low { display: inline-block; background: var(--warn); color: #fff; font-size: 0.7em; border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+        #section-inventory .inv-qty { min-width: 68px; text-align: center; background: #f7f4ef; border: 1px solid var(--line); border-radius: 8px; padding: 6px 4px; cursor: pointer; }
+        #section-inventory .inv-qty b { font-size: 1.25em; } #section-inventory .inv-qty small { color: #888; margin-left: 2px; }
+        #section-inventory .inv-step { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 1.4em; font-weight: bold; color: #555; cursor: pointer; flex: none; padding: 0; }
+        #section-inventory .inv-empty { text-align: center; color: #999; padding: 26px 10px; font-size: 0.9em; }
+        #section-inventory .inv-btn { border: none; border-radius: 8px; padding: 10px 14px; font-weight: bold; cursor: pointer; background: var(--inv); color: #fff; }
+        #section-inventory .inv-btn.sub { background: #fff; color: var(--inv); border: 1px solid var(--inv); }
+        #section-inventory .inv-btn.gray { background: #999; } #section-inventory .inv-btn.red { background: var(--warn); }
+        #section-inventory .inv-btn.full { width: 100%; margin-top: 10px; padding: 12px; }
+        #section-inventory .inv-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        #section-inventory .inv-hint { font-size: 0.75em; color: #888; font-weight: normal; }
+        #section-inventory .inv-log { display: flex; gap: 10px; align-items: baseline; padding: 9px 4px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        #section-inventory .inv-log time { color: #999; font-size: 0.8em; white-space: nowrap; min-width: 7.5em; }
+        #section-inventory .inv-log .nm { flex: 1; min-width: 0; } #section-inventory .inv-log .nm small { color: #888; display: block; font-size: 0.8em; }
+        #section-inventory .plus { color: var(--ok); font-weight: bold; white-space: nowrap; } #section-inventory .minus { color: var(--warn); font-weight: bold; white-space: nowrap; }
+        #section-inventory .inv-shop { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid #eee; }
+        #section-inventory .inv-shop b { display: block; } #section-inventory .inv-shop small { color: #888; }
+        #section-inventory .inv-status { font-size: 0.75em; color: #888; text-align: right; margin-top: 6px; min-height: 1.2em; }
+        #inv-sheet-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2500; }
+        #inv-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2501; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .2s; }
+        #inv-sheet.on { transform: none; } #inv-sheet-bg.on { display: block; }
+        #inv-sheet .seg { display: flex; gap: 6px; margin-top: 10px; }
+        #inv-sheet .seg button { flex: 1; padding: 10px 4px; border: 1px solid #ccc; background: #fff; border-radius: 8px; font-weight: bold; color: #666; cursor: pointer; }
+        #inv-sheet .seg button.on { background: #2f7d6d; color: #fff; border-color: #2f7d6d; }
+        #inv-sheet .inv-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+        #inv-sheet .inv-btn { border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; background: #2f7d6d; color: #fff; }
+        #inv-sheet .inv-btn.gray { background: #999; }
+
         .layout { display: block; }
 
         /* パソコン・タブレット：左に入力、右にレポート／カレンダー */
@@ -282,6 +329,7 @@
         <button class="tab-btn" id="tab-purchase" onclick="switchTab('purchase')">仕入入力</button>
         <button class="tab-btn" id="tab-report" onclick="switchTab('report')">レポート</button>
         <button class="tab-btn" id="tab-calendar" onclick="switchTab('calendar')">目標カレンダー</button>
+        <button class="tab-btn" id="tab-inventory" onclick="switchTab('inventory')">在庫</button>
     </div>
 
     <div class="layout">
@@ -419,11 +467,91 @@
             <div class="cal-legend" id="cal-legend"></div>
             <div class="day-detail" id="day-detail"></div>
         </div>
+
+        <!-- ===== 在庫（保存先：ホームページ用 Apps Script のスプレッドシート「在庫」「在庫履歴」） ===== -->
+        <div id="section-inventory" style="display: none;">
+            <div id="inv-lock" class="inv-card" style="text-align:center;">
+                <b>在庫管理</b>
+                <p style="font-size:0.85em; color:#666; margin:6px 0 10px;">合言葉を入れてください（この端末では次から自動で開きます）</p>
+                <input type="password" id="inv-pass" autocomplete="current-password" style="text-align:center;" onkeydown="if(event.key==='Enter')Inv.unlock()">
+                <button class="inv-btn full" onclick="Inv.unlock()">ひらく</button>
+                <p id="inv-lock-msg" style="color:#c0392b; font-size:0.85em; min-height:1.2em; margin:8px 0 0;"></p>
+            </div>
+            <div id="inv-body" hidden>
+                <div class="inv-tabs">
+                    <button id="it-stock" class="on" onclick="Inv.tab('stock')">在庫</button>
+                    <button id="it-shop" onclick="Inv.tab('shop')">買い物<span class="inv-badge" id="inv-shop-badge" hidden></span></button>
+                    <button id="it-log" onclick="Inv.tab('log')">履歴</button>
+                    <button id="it-items" onclick="Inv.tab('items')">品目</button>
+                </div>
+                <div class="inv-status" id="inv-status"></div>
+
+                <section class="inv-panel on" id="ip-stock">
+                    <div class="inv-tools">
+                        <input type="search" id="inv-q" placeholder="品名で探す" oninput="Inv.renderStock()">
+                        <select id="inv-cat-filter" onchange="Inv.renderStock()"></select>
+                    </div>
+                    <div id="inv-stock-list"></div>
+                    <p class="inv-hint" style="margin-top:10px;">＋／−で1つずつ増減。数字を押すと「入庫」「使用」「数え直し」を数とメモつきで入力できます。</p>
+                </section>
+
+                <section class="inv-panel" id="ip-shop">
+                    <div class="inv-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                            <b>発注点を下回った品目</b><button class="inv-btn sub" onclick="Inv.copyShop()">リストをコピー</button>
+                        </div>
+                        <div id="inv-shop-list"></div>
+                        <p class="inv-hint" style="margin-top:10px;">「発注点」（この数以下になったら買う）は「品目」タブで決められます。</p>
+                    </div>
+                </section>
+
+                <section class="inv-panel" id="ip-log">
+                    <div class="inv-tools"><select id="inv-log-filter" onchange="Inv.renderLogs()"></select></div>
+                    <div class="inv-card" id="inv-log-list"></div>
+                </section>
+
+                <section class="inv-panel" id="ip-items">
+                    <div class="inv-card">
+                        <b id="inv-form-title">品目を追加</b>
+                        <input type="hidden" id="inv-f-id">
+                        <div class="inv-grid2">
+                            <div><label>区分</label><select id="inv-f-cat"></select></div>
+                            <div><label>単位</label><input id="inv-f-unit" list="inv-units" placeholder="本・個・袋 など"></div>
+                        </div>
+                        <label>品名</label><input id="inv-f-name" placeholder="例：ウイスキー（角）">
+                        <div class="inv-grid2">
+                            <div id="inv-f-qty-wrap"><label>今の数</label><input id="inv-f-qty" type="text" inputmode="decimal" placeholder="0"></div>
+                            <div><label>発注点 <span class="inv-hint">（任意）</span></label><input id="inv-f-reorder" type="text" inputmode="decimal" placeholder="例：2"></div>
+                        </div>
+                        <label>メモ <span class="inv-hint">（任意・買う店など）</span></label><input id="inv-f-memo" placeholder="例：業務スーパー">
+                        <button class="inv-btn full" onclick="Inv.saveItem()" id="inv-f-save">追加する</button>
+                        <button class="inv-btn gray full" onclick="Inv.resetForm()" id="inv-f-cancel" hidden>やめる</button>
+                    </div>
+                    <div id="inv-item-list"></div>
+                </section>
+            </div>
+        </div>
     </div>
     </div>
 </div>
 
 <div id="toast"></div>
+
+<datalist id="inv-units"><option>本</option><option>個</option><option>袋</option><option>箱</option><option>パック</option><option>缶</option><option>瓶</option><option>kg</option><option>g</option><option>L</option><option>ml</option></datalist>
+<div id="inv-sheet-bg" onclick="Inv.closeSheet()"></div>
+<div id="inv-sheet">
+    <b id="inv-s-name"></b> <span id="inv-s-now" style="color:#888; font-size:0.9em;"></span>
+    <div class="seg">
+        <button id="inv-s-in" onclick="Inv.setMode('in')">入庫（＋）</button>
+        <button id="inv-s-out" onclick="Inv.setMode('out')">使用（−）</button>
+        <button id="inv-s-set" onclick="Inv.setMode('set')">数え直し</button>
+    </div>
+    <label id="inv-s-label">増やす数</label>
+    <input id="inv-s-num" type="text" inputmode="decimal" style="font-size:1.4em; text-align:center;">
+    <label>メモ <span style="font-weight:normal; color:#888;">（任意）</span></label>
+    <input id="inv-s-note" placeholder="例：業務スーパーで購入">
+    <div class="inv-grid2"><button class="inv-btn gray" onclick="Inv.closeSheet()">やめる</button><button class="inv-btn" onclick="Inv.applySheet()">保存</button></div>
+</div>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbysuqUZwOrTU_-GHNpAb-3rEr4tU9fHfn0aIPuBnzT-uvHnql8yyVFqT4pCQvu8gfNu/exec";
@@ -538,12 +666,13 @@
     function applyLayout() {
         const wide = isWide();
         const shown = (t) => wide ? (t === inputTab || t === viewTab) : t === activeTab;
-        ['sales', 'purchase', 'report', 'calendar'].forEach(t => {
+        ['sales', 'purchase', 'report', 'calendar', 'inventory'].forEach(t => {
             document.getElementById(`section-${t}`).style.display = shown(t) ? 'block' : 'none';
             document.getElementById(`tab-${t}`).className = 'tab-btn' + (shown(t) ? ` active-${t}` : '');
         });
         if (shown('report')) renderReport();
         if (shown('calendar')) renderCalendar();
+        if (shown('inventory')) Inv.open();
     }
 
     /* ===== 入力フォーム ===== */
@@ -962,6 +1091,200 @@
     function changeMonth(offset) { resetHistoryLimit(); reportMonth += offset; if (reportMonth < 1) { reportMonth = 12; reportYear--; } else if (reportMonth > 12) { reportMonth = 1; reportYear++; } renderReport(); renderCalendar(); }
     let toastTimer = null;
     function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.style.display = 'none', 2000); }
+</script>
+
+<script>
+/* ===== 在庫管理（帳簿の「在庫」タブ） =====
+   保存先はホームページ用の Apps Script（スプレッドシートの「在庫」「在庫履歴」シート）。合言葉が必要。 */
+window.Inv = (function () {
+    const API = "https://script.google.com/macros/s/AKfycbzQRAhDa8-BhxaB6IqsQ-hTmkAYLlu_x-5VK44U20hibIarUrgLSGz7wmZDgPgFsQKD6g/exec";
+    const CATEGORIES = ['酒類・飲料', '食材・おつまみ', '消耗品', '備品', 'その他'];
+    const PASS_KEY = 'sereness_inv_pass';
+    let PASS = '', items = [], logs = [], opened = false, loading = false;
+    const $ = (id) => document.getElementById(id);
+    const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const toNum = (v) => { const n = parseFloat(String(v ?? '').replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : NaN; };
+    const fmt = (n) => (Math.round(n * 100) / 100).toString();
+    const hasRe = (it) => it.reorder !== null && it.reorder !== '' && it.reorder !== undefined;
+    const isLow = (it) => hasRe(it) && it.qty <= it.reorder;
+    const status = (t) => { $('inv-status').textContent = t || ''; };
+    const nowStr = () => { const d = new Date(), p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
+
+    async function api(payload) {
+        const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(Object.assign({ pass: PASS }, payload)) });
+        const j = await res.json();
+        if (j.status !== 'success') throw new Error(j.message || '保存できませんでした');
+        return j;
+    }
+
+    // タブを開いたとき：保存済みの合言葉があれば自動で読み込む
+    function open() {
+        if (opened) return; opened = true;
+        let saved = ''; try { saved = localStorage.getItem(PASS_KEY) || ''; } catch (e) {}
+        if (saved) unlock(saved);
+    }
+    async function unlock(saved) {
+        PASS = saved || $('inv-pass').value.trim();
+        if (!PASS) return;
+        $('inv-lock-msg').textContent = '確認中…';
+        try {
+            const j = await api({ type: 'inv_list' });
+            try { localStorage.setItem(PASS_KEY, PASS); } catch (e) {}
+            items = j.items; logs = j.logs;
+            $('inv-lock').hidden = true; $('inv-body').hidden = false; $('inv-lock-msg').textContent = '';
+            resetForm(); renderAll(); status('');
+        } catch (e) {
+            $('inv-lock-msg').textContent = String(e.message).includes('合言葉') ? '合言葉が違います' : '読み込めませんでした（' + e.message + '）';
+            if (saved) { try { localStorage.removeItem(PASS_KEY); } catch (x) {} }
+        }
+    }
+    async function reload() {
+        if (loading || !PASS) return; loading = true; status('↻ 読み込み中');
+        try { const j = await api({ type: 'inv_list' }); items = j.items; logs = j.logs; renderAll(); status(''); }
+        catch (e) { status('⚠️ 読み込めませんでした'); }
+        loading = false;
+    }
+
+    function tab(t) { ['stock', 'shop', 'log', 'items'].forEach(x => { $('ip-' + x).classList.toggle('on', x === t); $('it-' + x).classList.toggle('on', x === t); }); }
+    function cats() { const s = new Set(CATEGORIES); items.forEach(i => i.category && s.add(i.category)); return [...s]; }
+    function grouped(list) {
+        const order = cats(), g = {};
+        list.forEach(i => { const c = i.category || 'その他'; (g[c] = g[c] || []).push(i); });
+        return Object.keys(g).sort((a, b) => order.indexOf(a) - order.indexOf(b)).map(k => [k, g[k]]);
+    }
+    function fillSelects() {
+        const cf = $('inv-cat-filter'), v1 = cf.value; cf.innerHTML = '<option value="">すべての区分</option>' + cats().map(c => `<option>${h(c)}</option>`).join(''); cf.value = v1;
+        const fc = $('inv-f-cat'), v2 = fc.value; fc.innerHTML = cats().map(c => `<option>${h(c)}</option>`).join(''); if (v2) fc.value = v2;
+        const lf = $('inv-log-filter'), v3 = lf.value; lf.innerHTML = '<option value="">すべての品目</option>' + items.map(i => `<option value="${h(i.id)}">${h(i.name)}</option>`).join(''); lf.value = v3;
+    }
+    function renderAll() { fillSelects(); renderStock(); renderShop(); renderLogs(); renderItems(); }
+    function renderStock() {
+        const q = $('inv-q').value.trim().toLowerCase(), cf = $('inv-cat-filter').value, box = $('inv-stock-list');
+        const low = items.filter(isLow).length, b = $('inv-shop-badge'); b.hidden = !low; b.textContent = low;
+        if (!items.length) { box.innerHTML = '<div class="inv-card inv-empty">まだ品目がありません。<br>「品目」タブから追加してください。</div>'; return; }
+        const list = items.filter(i => (!q || String(i.name).toLowerCase().includes(q)) && (!cf || i.category === cf));
+        if (!list.length) { box.innerHTML = '<div class="inv-empty">見つかりません</div>'; return; }
+        box.innerHTML = grouped(list).map(([c, arr]) => `<div class="inv-cat">${h(c)}<small>${arr.length}品目</small></div>` + arr.map(i => `
+            <div class="inv-row ${isLow(i) ? 'low' : ''}">
+                <div class="inv-main"><div class="inv-name">${h(i.name)}${isLow(i) ? '<span class="inv-low">発注</span>' : ''}</div>
+                    <div class="inv-sub">${hasRe(i) ? `発注点 ${fmt(i.reorder)}${h(i.unit)}` : ''}${i.memo ? '　' + h(i.memo) : ''}</div></div>
+                <button class="inv-step" onclick="Inv.step('${h(i.id)}',-1)" aria-label="${h(i.name)}を1減らす">−</button>
+                <div class="inv-qty" onclick="Inv.openSheet('${h(i.id)}')"><b>${fmt(i.qty)}</b><small>${h(i.unit)}</small></div>
+                <button class="inv-step" onclick="Inv.step('${h(i.id)}',1)" aria-label="${h(i.name)}を1増やす">＋</button>
+            </div>`).join('')).join('');
+    }
+    function renderShop() {
+        const low = items.filter(isLow);
+        $('inv-shop-list').innerHTML = low.length ? low.map(i => `<div class="inv-shop"><div><b>${h(i.name)}</b><small>今 ${fmt(i.qty)}${h(i.unit)} ／ 発注点 ${fmt(i.reorder)}${h(i.unit)}${i.memo ? '　' + h(i.memo) : ''}</small></div><span class="inv-low">発注</span></div>`).join('')
+            : '<div class="inv-empty">足りないものはありません 👍</div>';
+    }
+    function copyShop() {
+        const low = items.filter(isLow);
+        if (!low.length) return showToast('足りないものはありません');
+        const text = '【買い物リスト】\n' + low.map(i => `・${i.name}（今 ${fmt(i.qty)}${i.unit}）${i.memo ? ' ' + i.memo : ''}`).join('\n');
+        (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => showToast('コピーしました')).catch(() => prompt('コピーしてください', text));
+    }
+    function renderLogs() {
+        const f = $('inv-log-filter').value, list = logs.filter(l => !f || l.id === f);
+        $('inv-log-list').innerHTML = list.length ? list.map(l => `<div class="inv-log"><time>${h(String(l.at).slice(5, 16))}</time>
+            <div class="nm">${h(l.name)}<small>${h(l.reason)}${l.note ? '　' + h(l.note) : ''}</small></div>
+            <span class="${l.delta >= 0 ? 'plus' : 'minus'}">${l.delta > 0 ? '+' : ''}${fmt(l.delta)}</span><span style="color:#888; font-size:0.85em; white-space:nowrap;">→ ${fmt(l.after)}</span></div>`).join('')
+            : '<div class="inv-empty">履歴はまだありません</div>';
+    }
+    function renderItems() {
+        $('inv-item-list').innerHTML = grouped(items).map(([c, arr]) => `<div class="inv-cat">${h(c)}<small>${arr.length}品目</small></div>` + arr.map(i => `
+            <div class="inv-row"><div class="inv-main"><div class="inv-name">${h(i.name)}</div><div class="inv-sub">${fmt(i.qty)}${h(i.unit)}${hasRe(i) ? `・発注点 ${fmt(i.reorder)}` : ''}${i.memo ? '・' + h(i.memo) : ''}</div></div>
+            <button class="inv-btn sub" onclick="Inv.editItem('${h(i.id)}')">編集</button><button class="inv-btn red" onclick="Inv.deleteItem('${h(i.id)}')">削除</button></div>`).join('')).join('');
+    }
+
+    // ＋／−：続けて押した分は、まとめて1回で保存する
+    const pending = {}, timers = {};
+    function step(id, d) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        if (it.qty + d < 0) return showToast('0より少なくはできません');
+        it.qty = Math.round((it.qty + d) * 100) / 100;
+        pending[id] = (pending[id] || 0) + d;
+        renderStock(); renderShop(); status('↻ 保存待ち');
+        clearTimeout(timers[id]); timers[id] = setTimeout(() => flush(id), 900);
+    }
+    async function flush(id) {
+        const d = pending[id]; delete pending[id];
+        if (!d) { if (!Object.keys(pending).length) status(''); return; }
+        status('↻ 保存中');
+        try {
+            const j = await api({ type: 'inv_adjust', id, delta: d, reason: d > 0 ? '入庫' : '使用' });
+            const it = items.find(x => x.id === id); if (it && !pending[id]) it.qty = j.qty;
+            logs.unshift({ at: nowStr(), id, name: (it || {}).name, delta: d, after: j.qty, reason: d > 0 ? '入庫' : '使用', note: '' });
+            renderLogs(); if (!Object.keys(pending).length) status('✓ 保存しました');
+        } catch (e) { status('⚠️ 保存できませんでした'); alert('在庫を保存できませんでした：' + e.message + '\n最新の状態に戻します。'); reload(); }
+    }
+
+    // 入庫・使用・数え直し
+    let sheetId = null, mode = 'in';
+    function openSheet(id) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        sheetId = id; $('inv-s-name').textContent = it.name; $('inv-s-now').textContent = `今 ${fmt(it.qty)}${it.unit}`;
+        $('inv-s-num').value = ''; $('inv-s-note').value = ''; setMode('in');
+        $('inv-sheet').classList.add('on'); $('inv-sheet-bg').classList.add('on');
+        setTimeout(() => $('inv-s-num').focus(), 200);
+    }
+    function closeSheet() { $('inv-sheet').classList.remove('on'); $('inv-sheet-bg').classList.remove('on'); }
+    function setMode(m) {
+        mode = m; ['in', 'out', 'set'].forEach(x => $('inv-s-' + x).classList.toggle('on', x === m));
+        $('inv-s-label').textContent = { in: '増やす数', out: '使った数', set: '実際に数えた数' }[m];
+    }
+    async function applySheet() {
+        const it = items.find(x => x.id === sheetId), n = toNum($('inv-s-num').value);
+        if (!it || !isFinite(n) || n < 0) return alert('数を入れてください');
+        const note = $('inv-s-note').value.trim(), p = { type: 'inv_adjust', id: it.id, note };
+        if (mode === 'set') { p.setTo = n; p.reason = '数え直し'; }
+        else { if (mode === 'out' && n > it.qty) return alert(`今の数（${fmt(it.qty)}${it.unit}）より多くは使えません`); p.delta = mode === 'in' ? n : -n; p.reason = mode === 'in' ? '入庫' : '使用'; }
+        closeSheet(); status('↻ 保存中');
+        try {
+            const j = await api(p), before = it.qty; it.qty = j.qty;
+            logs.unshift({ at: nowStr(), id: it.id, name: it.name, delta: Math.round((j.qty - before) * 100) / 100, after: j.qty, reason: p.reason, note });
+            renderAll(); status('✓ 保存しました'); showToast(`${it.name}：${fmt(j.qty)}${it.unit}`);
+        } catch (e) { status('⚠️ 保存できませんでした'); alert('在庫を保存できませんでした：' + e.message); reload(); }
+    }
+
+    // 品目
+    function resetForm() {
+        ['inv-f-id', 'inv-f-name', 'inv-f-unit', 'inv-f-qty', 'inv-f-reorder', 'inv-f-memo'].forEach(id => $(id).value = '');
+        $('inv-form-title').textContent = '品目を追加'; $('inv-f-save').textContent = '追加する'; $('inv-f-cancel').hidden = true;
+        $('inv-f-qty-wrap').style.visibility = 'visible';
+    }
+    function editItem(id) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        $('inv-f-id').value = it.id; $('inv-f-cat').value = it.category || 'その他'; $('inv-f-name').value = it.name; $('inv-f-unit').value = it.unit || '';
+        $('inv-f-reorder').value = hasRe(it) ? it.reorder : ''; $('inv-f-memo').value = it.memo || '';
+        $('inv-form-title').textContent = `「${it.name}」を編集`; $('inv-f-save').textContent = '上書き保存'; $('inv-f-cancel').hidden = false;
+        $('inv-f-qty-wrap').style.visibility = 'hidden';   // 数は「在庫」タブで変える（履歴に残すため）
+        $('ip-items').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    async function saveItem() {
+        const name = $('inv-f-name').value.trim(); if (!name) return alert('品名を入れてください');
+        const id = $('inv-f-id').value, r = $('inv-f-reorder').value.trim(), q = $('inv-f-qty').value.trim();
+        if (r && !isFinite(toNum(r))) return alert('発注点は数字で入れてください');
+        if (!id && q && !isFinite(toNum(q))) return alert('今の数は数字で入れてください');
+        if (!id && items.some(x => x.name === name) && !confirm(`「${name}」はすでにあります。もう1つ追加しますか？`)) return;
+        const item = { id, category: $('inv-f-cat').value, name, unit: $('inv-f-unit').value.trim(), qty: q ? toNum(q) : 0, reorder: r ? toNum(r) : null, memo: $('inv-f-memo').value.trim() };
+        status('↻ 保存中');
+        try { const j = await api({ type: 'inv_save_item', item }); items = j.items; resetForm(); renderAll(); status('✓ 保存しました'); showToast(id ? '上書き保存しました' : '追加しました'); reload(); }
+        catch (e) { status('⚠️ 保存できませんでした'); alert('保存できませんでした：' + e.message); }
+    }
+    async function deleteItem(id) {
+        const it = items.find(x => x.id === id); if (!it || !confirm(`「${it.name}」を削除しますか？（履歴は残ります）`)) return;
+        status('↻ 保存中');
+        try { const j = await api({ type: 'inv_delete_item', id }); items = j.items; renderAll(); status('✓ 削除しました'); reload(); }
+        catch (e) { status('⚠️ 保存できませんでした'); alert('削除できませんでした：' + e.message); }
+    }
+
+    // 閉じる前に、まだ送っていない＋／−を送る。戻ってきたら最新を読み込む
+    window.addEventListener('pagehide', () => { Object.keys(pending).forEach(id => { const d = pending[id]; if (d && navigator.sendBeacon) navigator.sendBeacon(API, new Blob([JSON.stringify({ pass: PASS, type: 'inv_adjust', id, delta: d, reason: d > 0 ? '入庫' : '使用' })], { type: 'text/plain' })); }); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && PASS && opened && !Object.keys(pending).length && document.getElementById('section-inventory').style.display !== 'none') reload(); });
+
+    return { open, unlock, tab, renderStock, renderLogs, copyShop, step, openSheet, closeSheet, setMode, applySheet, editItem, saveItem, deleteItem, resetForm };
+})();
 </script>
 </body>
 </html>
