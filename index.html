@@ -282,7 +282,7 @@
         #section-inventory .inv-shop b { display: block; } #section-inventory .inv-shop small { color: #888; }
         #section-inventory .inv-status { font-size: 0.75em; color: #888; text-align: right; margin-top: 6px; min-height: 1.2em; }
         #inv-sheet-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2500; }
-        #inv-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2501; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .2s; }
+        #inv-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2501; background: #fff; border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; transform: translateY(110%); transition: transform .2s; max-height: 88vh; overflow-y: auto; }
         #inv-sheet.on { transform: none; } #inv-sheet-bg.on { display: block; }
         #inv-sheet .seg { display: flex; gap: 6px; margin-top: 10px; }
         #inv-sheet .seg button { flex: 1; padding: 10px 4px; border: 1px solid #ccc; background: #fff; border-radius: 8px; font-weight: bold; color: #666; cursor: pointer; }
@@ -548,8 +548,13 @@
     </div>
     <label id="inv-s-label">増やす数</label>
     <input id="inv-s-num" type="text" inputmode="decimal" style="font-size:1.4em; text-align:center;">
-    <label>メモ <span style="font-weight:normal; color:#888;">（任意）</span></label>
-    <input id="inv-s-note" placeholder="例：業務スーパーで購入">
+    <div id="inv-s-buy">
+        <label>仕入れ金額（合計・任意）</label>
+        <div class="input-group"><input id="inv-s-amount" type="text" pattern="[0-9]*" inputmode="numeric" placeholder="例：5600"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin-top:10px; cursor:pointer;"><input type="checkbox" id="inv-s-ledger" checked style="width:auto; margin:0;"> 帳簿の「仕入」にも記録する</label>
+    </div>
+    <label>メモ <span style="font-weight:normal; color:#888;">（任意・購入先など）</span></label>
+    <input id="inv-s-note" placeholder="例：業務スーパー">
     <div class="inv-grid2"><button class="inv-btn gray" onclick="Inv.closeSheet()">やめる</button><button class="inv-btn" onclick="Inv.applySheet()">保存</button></div>
 </div>
 
@@ -1187,7 +1192,7 @@ window.Inv = (function () {
     function renderLogs() {
         const f = $('inv-log-filter').value, list = logs.filter(l => !f || l.id === f);
         $('inv-log-list').innerHTML = list.length ? list.map(l => `<div class="inv-log"><time>${h(String(l.at).slice(5, 16))}</time>
-            <div class="nm">${h(l.name)}<small>${h(l.reason)}${l.note ? '　' + h(l.note) : ''}</small></div>
+            <div class="nm">${h(l.name)}<small>${h(l.reason)}${l.amount ? '　' + yen(l.amount) : ''}${l.note ? '　' + h(l.note) : ''}</small></div>
             <span class="${l.delta >= 0 ? 'plus' : 'minus'}">${l.delta > 0 ? '+' : ''}${fmt(l.delta)}</span><span style="color:#888; font-size:0.85em; white-space:nowrap;">→ ${fmt(l.after)}</span></div>`).join('')
             : '<div class="inv-empty">履歴はまだありません</div>';
     }
@@ -1224,7 +1229,7 @@ window.Inv = (function () {
     function openSheet(id) {
         const it = items.find(x => x.id === id); if (!it) return;
         sheetId = id; $('inv-s-name').textContent = it.name; $('inv-s-now').textContent = `今 ${fmt(it.qty)}${it.unit}`;
-        $('inv-s-num').value = ''; $('inv-s-note').value = ''; setMode('in');
+        $('inv-s-num').value = ''; $('inv-s-note').value = ''; $('inv-s-amount').value = ''; $('inv-s-ledger').checked = true; setMode('in');
         $('inv-sheet').classList.add('on'); $('inv-sheet-bg').classList.add('on');
         setTimeout(() => $('inv-s-num').focus(), 200);
     }
@@ -1232,19 +1237,37 @@ window.Inv = (function () {
     function setMode(m) {
         mode = m; ['in', 'out', 'set'].forEach(x => $('inv-s-' + x).classList.toggle('on', x === m));
         $('inv-s-label').textContent = { in: '増やす数', out: '使った数', set: '実際に数えた数' }[m];
+        $('inv-s-buy').style.display = m === 'in' ? 'block' : 'none';   // 仕入れ金額は「入庫」のときだけ
     }
     async function applySheet() {
         const it = items.find(x => x.id === sheetId), n = toNum($('inv-s-num').value);
         if (!it || !isFinite(n) || n < 0) return alert('数を入れてください');
         const note = $('inv-s-note').value.trim(), p = { type: 'inv_adjust', id: it.id, note };
+        const amount = mode === 'in' ? toNum($('inv-s-amount').value) : NaN;
+        if (mode === 'in' && $('inv-s-amount').value.trim() && !(amount >= 0)) return alert('仕入れ金額は数字で入れてください');
+        if (amount > 0) p.amount = amount;
+        const toLedger = amount > 0 && $('inv-s-ledger').checked;
         if (mode === 'set') { p.setTo = n; p.reason = '数え直し'; }
         else { if (mode === 'out' && n > it.qty) return alert(`今の数（${fmt(it.qty)}${it.unit}）より多くは使えません`); p.delta = mode === 'in' ? n : -n; p.reason = mode === 'in' ? '入庫' : '使用'; }
         closeSheet(); status('↻ 保存中');
         try {
             const j = await api(p), before = it.qty; it.qty = j.qty;
-            logs.unshift({ at: nowStr(), id: it.id, name: it.name, delta: Math.round((j.qty - before) * 100) / 100, after: j.qty, reason: p.reason, note });
-            renderAll(); status('✓ 保存しました'); showToast(`${it.name}：${fmt(j.qty)}${it.unit}`);
+            logs.unshift({ at: nowStr(), id: it.id, name: it.name, delta: Math.round((j.qty - before) * 100) / 100, after: j.qty, reason: p.reason, note, amount: p.amount ?? null });
+            if (toLedger) addPurchase(it, n, amount, note);
+            renderAll(); status('✓ 保存しました'); showToast(`${it.name}：${fmt(j.qty)}${it.unit}` + (toLedger ? '（仕入にも記録）' : ''));
         } catch (e) { status('⚠️ 保存できませんでした'); alert('在庫を保存できませんでした：' + e.message); reload(); }
+    }
+
+    // 入庫の仕入れ金額を、帳簿の「仕入」にも1件として記録する（今日の日付・区分は在庫の区分から）
+    const LEDGER_CAT = { '酒類・飲料': '酒類・飲料', '食材・おつまみ': '食材・おつまみ', '消耗品': '消耗品（紙袋・洗剤など）', '備品': '備品・設備' };
+    function addPurchase(it, qty, amount, note) {
+        const record = {
+            id: Date.now(), type: 'purchase', date: ymd(new Date()), category: LEDGER_CAT[it.category] || 'その他経費', amount: Math.round(amount),
+            note: (note ? note + ' ' : '') + '（在庫から入力）', items: [{ name: `${it.name}（${fmt(qty)}${it.unit || ''}）`, price: Math.round(amount), qty: 1 }], shipping: 0, discount: 0
+        };
+        allLedgerData.push(record);
+        renderReport(); renderCalendar(); renderTodayStatus();
+        enqueue({ type: 'ledger_save', record });
     }
 
     // 品目
