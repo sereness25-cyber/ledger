@@ -523,6 +523,11 @@
                             <div id="inv-f-qty-wrap"><label>今の数</label><input id="inv-f-qty" type="text" inputmode="decimal" placeholder="0"></div>
                             <div><label>発注点 <span class="inv-hint">（任意）</span></label><input id="inv-f-reorder" type="text" inputmode="decimal" placeholder="例：2"></div>
                         </div>
+                        <div id="inv-f-buy">
+                            <label>仕入れ金額（合計・任意）</label>
+                            <div class="input-group"><input id="inv-f-amount" type="text" pattern="[0-9]*" inputmode="numeric" placeholder="例：5600"></div>
+                            <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin-top:10px; cursor:pointer;"><input type="checkbox" id="inv-f-ledger" checked style="width:auto; margin:0;"> 帳簿の「仕入」にも記録する</label>
+                        </div>
                         <label>メモ <span class="inv-hint">（任意・買う店など）</span></label><input id="inv-f-memo" placeholder="例：業務スーパー">
                         <button class="inv-btn full" onclick="Inv.saveItem()" id="inv-f-save">追加する</button>
                         <button class="inv-btn gray full" onclick="Inv.resetForm()" id="inv-f-cancel" hidden>やめる</button>
@@ -1272,7 +1277,8 @@ window.Inv = (function () {
 
     // 品目
     function resetForm() {
-        ['inv-f-id', 'inv-f-name', 'inv-f-unit', 'inv-f-qty', 'inv-f-reorder', 'inv-f-memo'].forEach(id => $(id).value = '');
+        ['inv-f-id', 'inv-f-name', 'inv-f-unit', 'inv-f-qty', 'inv-f-reorder', 'inv-f-memo', 'inv-f-amount'].forEach(id => $(id).value = '');
+        $('inv-f-ledger').checked = true; $('inv-f-buy').style.display = '';
         $('inv-form-title').textContent = '品目を追加'; $('inv-f-save').textContent = '追加する'; $('inv-f-cancel').hidden = true;
         $('inv-f-qty-wrap').style.visibility = 'visible';
     }
@@ -1282,6 +1288,7 @@ window.Inv = (function () {
         $('inv-f-reorder').value = hasRe(it) ? it.reorder : ''; $('inv-f-memo').value = it.memo || '';
         $('inv-form-title').textContent = `「${it.name}」を編集`; $('inv-f-save').textContent = '上書き保存'; $('inv-f-cancel').hidden = false;
         $('inv-f-qty-wrap').style.visibility = 'hidden';   // 数は「在庫」タブで変える（履歴に残すため）
+        $('inv-f-buy').style.display = 'none';            // 仕入れ金額は、追加するときと「入庫」のときだけ
         $('ip-items').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     async function saveItem() {
@@ -1290,9 +1297,17 @@ window.Inv = (function () {
         if (r && !isFinite(toNum(r))) return alert('発注点は数字で入れてください');
         if (!id && q && !isFinite(toNum(q))) return alert('今の数は数字で入れてください');
         if (!id && items.some(x => x.name === name) && !confirm(`「${name}」はすでにあります。もう1つ追加しますか？`)) return;
+        const amtRaw = $('inv-f-amount').value.trim(), amount = amtRaw ? toNum(amtRaw) : NaN;
+        if (!id && amtRaw && !(amount >= 0)) return alert('仕入れ金額は数字で入れてください');
         const item = { id, category: $('inv-f-cat').value, name, unit: $('inv-f-unit').value.trim(), qty: q ? toNum(q) : 0, reorder: r ? toNum(r) : null, memo: $('inv-f-memo').value.trim() };
+        if (!id && amount > 0) item.amount = amount;
+        const toLedger = !id && amount > 0 && $('inv-f-ledger').checked;
         status('↻ 保存中');
-        try { const j = await api({ type: 'inv_save_item', item }); items = j.items; resetForm(); renderAll(); status('✓ 保存しました'); showToast(id ? '上書き保存しました' : '追加しました'); reload(); }
+        try {
+            const j = await api({ type: 'inv_save_item', item }); items = j.items;
+            if (toLedger) addPurchase(item, item.qty, amount, item.memo);
+            resetForm(); renderAll(); status('✓ 保存しました'); showToast(id ? '上書き保存しました' : '追加しました' + (toLedger ? '（仕入にも記録）' : '')); reload();
+        }
         catch (e) { status('⚠️ 保存できませんでした'); alert('保存できませんでした：' + e.message); }
     }
     async function deleteItem(id) {
