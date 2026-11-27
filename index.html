@@ -770,7 +770,12 @@
             if (n || p) items.push({ name: n || '名称なし', price: p, qty: q });
         });
         const total = calcTotal(type);
-        if (!date || total <= 0) return alert(type === 'sales' ? "売上金額を入力してください" : "金額か明細を入力してください");
+        if (!date) return alert("日付を入力してください");
+        if (type === 'sales') {
+            // 売上は0円でも記録できる（金額の欄に「0」と入れるか、人数を入れたとき）
+            const amountEntered = document.getElementById('sales-amount').value.trim() !== '';
+            if (!amountEntered && items.length === 0) return alert("売上金額を入力してください（0円の日は「0」と入力）");
+        } else if (total <= 0) return alert("金額か明細を入力してください");
 
         saving = true; setTimeout(() => saving = false, 800);   // 二度押し防止
         const record = { id: editId ? parseInt(editId) : Date.now(), type, date, category: cat, amount: Math.max(0, total), note, items, shipping: type === 'purchase' ? parseInt(document.getElementById('purchase-shipping').value) || 0 : 0, discount: type === 'purchase' ? parseInt(document.getElementById('purchase-discount').value) || 0 : 0 };
